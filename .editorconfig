@@ -1,0 +1,28 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.{cs,vb}]
+# Force `this.` always
+dotnet_diagnostic.IDE0003.severity = none
+dotnet_diagnostic.IDE0009.severity = warning
+dotnet_style_qualification_for_field = true
+dotnet_style_qualification_for_property = true
+dotnet_style_qualification_for_method = true
+dotnet_style_qualification_for_event = true
+
+# Do not recommend `new()`
+dotnet_diagnostic.IDE0090.severity = none
+# Do not remove unneeded parenthesis
+dotnet_diagnostic.IDE0047.severity = none
+# Do not use type keywords for member access or ctors i.e. allow `new String` or `Int32.MaxValue`
+dotnet_diagnostic.IDE0049.severity = none

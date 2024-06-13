@@ -1,0 +1,8 @@
+/bin
+/obj
+*.local
+/example
+
+# UCPEM
+ucpem_ports
+/.vscode
