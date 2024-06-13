@@ -394,6 +394,12 @@ namespace InterEx
                         var start = index;
                         var value = parseExpression();
 
+                        if (target is Statement.Invocation invocation)
+                        {
+                            invocation.Arguments.Add(value);
+                            continue;
+                        }
+
                         target = new Statement.Assignment(new IEPosition(path, input, start), target, value);
                         continue;
                     }
