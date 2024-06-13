@@ -8,7 +8,10 @@ var path = "./example/sample.ie";
 
 engine.AddProviderFallback(new ReflectionValueProvider().AddAllAssemblies());
 
-if (Environment.GetCommandLineArgs() is ["repl"])
+var argv = Environment.GetCommandLineArgs();
+Console.WriteLine(String.Join(", ", argv));
+
+if (argv is [_, "repl"])
 {
     while (true)
     {
@@ -37,7 +40,7 @@ if (Environment.GetCommandLineArgs() is ["repl"])
         }
     }
 }
-else if (Environment.GetCommandLineArgs() is ["loop"])
+else if (argv is [_, "loop"])
 {
     while (true)
     {
@@ -78,6 +81,7 @@ else
         Console.WriteLine(document.ToJson());
 
         var result = engine.Evaluate(document.Root, engine.PrepareCall());
+        Console.WriteLine(result.Content ?? "null");
     }
     catch (IEParsingException error)
     {
