@@ -68,7 +68,7 @@ namespace InterEx
                 }
 
                 var info = this.Owner._reflectionCache.GetClassInfo(this.Class);
-                if (!info.Methods.TryGetValue(name, out var overloads)) { result = default; return false; };
+                if (!info.Functions.TryGetValue(name, out var overloads)) { result = default; return false; };
 
                 result = engine.BridgeMethodCall(overloads, invocation, new IEEngine.Value(null), arguments);
                 return true;

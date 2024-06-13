@@ -32,13 +32,6 @@ namespace InterEx
             public bool Find(IEEngine engine, string name, out Value value);
         }
 
-        public interface IValueAdapter
-        {
-            public bool Set(IEEngine engine, Value receiver, string name, Value value);
-            public bool Get(IEEngine engine, Value receiver, string name, out Value value);
-            public bool Invoke(IEEngine engine, Value receiver, string name, out Value result, Value[] arguments);
-        }
-
         public sealed class Variable
         {
             public Value Content;
@@ -59,8 +52,6 @@ namespace InterEx
         public void AddProvider(IValueProvider provider) => this._providers.Add(provider);
         protected readonly List<IValueProvider> _providersFallback = new();
         public void AddProviderFallback(IValueProvider provider) => this._providersFallback.Add(provider);
-        protected readonly List<IValueAdapter> _adapters = new();
-        public void AddAdapter(IValueAdapter adapter) => this._adapters.Add(adapter);
 
         public Value ImportValue(object data)
         {
@@ -133,25 +124,34 @@ namespace InterEx
             return result;
         }
 
-        public object ExecuteMethodCall(MethodBase target, Value receiver, Value[] arguments)
+        public object ExecuteMethodCall(ReflectionCache.FunctionInfo function, Value receiver, Value[] arguments)
         {
             var result = (object)null;
 
+            var target = function.Target;
+
             if (target is MethodInfo method)
             {
-                var exportedArguments = this.ExportArguments(arguments, method.GetParameters().Select(v => v.ParameterType).ToArray());
+                var exportedArguments = this.ExportArguments(arguments, function.Parameters);
                 result = method.Invoke(receiver.Content, exportedArguments);
             }
             else if (target is ConstructorInfo constructor)
             {
-                var exportedArguments = this.ExportArguments(arguments, constructor.GetParameters().Select(v => v.ParameterType).ToArray());
+                var exportedArguments = this.ExportArguments(arguments, function.Parameters);
                 result = constructor.Invoke(exportedArguments);
             }
+            else if (target is Delegate @delegate)
+            {
+                var exportedArguments = this.ExportArguments(arguments, function.Parameters);
+                if (receiver.Content != null) exportedArguments = new[] { receiver.Content }.Concat(exportedArguments).ToArray();
+                result = @delegate.DynamicInvoke(exportedArguments);
+            }
+            else throw new();
 
             return result;
         }
 
-        public Value BridgeMethodCall(List<MethodBase> overloads, Statement.Invocation invocation, Value receiver, Value[] arguments)
+        public Value BridgeMethodCall(List<ReflectionCache.FunctionInfo> overloads, Statement.Invocation invocation, Value receiver, Value[] arguments)
         {
             if (invocation != null && invocation.CachedCall != null)
             {
@@ -194,8 +194,6 @@ namespace InterEx
                     messages.Add(error.Message);
                     continue;
                 }
-
-                if (resultObject is Value value) return value;
 
                 if (invocation != null && invocation.DeoptimizeCounter < 10) invocation.CachedCall = new(
                     ReceiverType: receiver.Content?.GetType(),

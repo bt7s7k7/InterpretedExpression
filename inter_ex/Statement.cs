@@ -23,7 +23,7 @@ namespace InterEx
             public record class DispatchCache(
                 Type ReceiverType,
                 Type[] Parameters,
-                MethodBase Target
+                ReflectionCache.FunctionInfo Target
             );
 
             public int DeoptimizeCounter = 0;

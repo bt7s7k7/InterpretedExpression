@@ -16,7 +16,7 @@ namespace InterEx
             variable.Content = content;
         }
 
-        protected readonly ReflectionCache _reflectionCache = new(ReflectionCache.BindingType.Instance);
+        public readonly ReflectionCache InstanceCache = new(ReflectionCache.BindingType.Instance);
         protected readonly ReflectionCache _operatorCache = new(ReflectionCache.BindingType.Static);
 
         public Value GetProperty(Value receiver, string name)
@@ -28,13 +28,8 @@ namespace InterEx
                 throw new IERuntimeException($"Object does not contain property '{name}'");
             }
 
-            foreach (var adapter in this._adapters)
-            {
-                if (adapter.Get(this, receiver, name, out var result)) return result;
-            }
-
             var type = receiver.Content.GetType();
-            var info = this._reflectionCache.GetClassInfo(type);
+            var info = this.InstanceCache.GetClassInfo(type);
 
             if (!info.Properties.TryGetValue(name, out var member)) throw new IERuntimeException($"Object does not contain property '{name}'");
 
@@ -58,13 +53,8 @@ namespace InterEx
                 throw new IERuntimeException($"Object does not contain property '{name}'");
             }
 
-            foreach (var adapter in this._adapters)
-            {
-                if (adapter.Set(this, receiver, name, value)) return;
-            }
-
             var type = receiver.Content.GetType();
-            var info = this._reflectionCache.GetClassInfo(type);
+            var info = this.InstanceCache.GetClassInfo(type);
 
             if (!info.Properties.TryGetValue(name, out var member)) throw new IERuntimeException($"Object does not contain property '{name}'");
 
@@ -97,19 +87,14 @@ namespace InterEx
                 throw new IERuntimeException($"Object does not contain method '{method}'");
             }
 
-            foreach (var adapter in this._adapters)
-            {
-                if (adapter.Invoke(this, receiver, method, out var result, arguments)) return result;
-            }
-
             var type = receiver.Content?.GetType();
-            var info = type == null ? null : this._reflectionCache.GetClassInfo(type);
+            var info = type == null ? null : this.InstanceCache.GetClassInfo(type);
 
             if (method == "") method = "Invoke";
-            if (info == null || !info.Methods.TryGetValue(method, out var overloads))
+            if (info == null || !info.Functions.TryGetValue(method, out var overloads))
             {
                 var operators = this._operatorCache.GetClassInfo(typeof(IEOperators));
-                if (operators.Methods.TryGetValue(method, out var operatorMethod))
+                if (operators.Functions.TryGetValue(method, out var operatorMethod))
                 {
                     var operatorArguments = new[] { receiver }.Concat(arguments).ToArray();
                     return this.BridgeMethodCall(operatorMethod, invocation, new(null), operatorArguments);
