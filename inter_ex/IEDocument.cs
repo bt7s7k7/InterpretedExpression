@@ -200,6 +200,59 @@ namespace InterEx
 
             string formatException(string message, int index) => new IEPosition(path, input, index).Format(message);
 
+            Statement parseString(char term)
+            {
+                var value = new StringBuilder();
+                var start = index - 1;
+
+                while (!isDone())
+                {
+                    var c = input[index];
+                    index++;
+
+                    if (c == term) break;
+                    if (c == '\\')
+                    {
+                        if (isDone()) throw new IEParsingException(formatException("Unexpected EOF", index));
+
+                        var e = input[index];
+                        index++;
+                        if (e == 'x')
+                        {
+                            var a = input[index];
+                            index++;
+                            if (isDone()) throw new IEParsingException(formatException("Unexpected EOF", index));
+                            var b = input[index];
+                            index++;
+                            if (!UInt16.TryParse(new char[] { a, b }, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var charValue))
+                            {
+                                throw new IEParsingException(formatException("Invalid number", index));
+                            }
+                            value.Append((char)charValue);
+                            continue;
+                        }
+
+                        value.Append(e switch
+                        {
+                            'n' => '\n',
+                            'r' => '\r',
+                            't' => '\t',
+                            '\'' => '\'',
+                            '"' => '"',
+                            '`' => '`',
+                            '\\' => '\\',
+                            _ => throw new IEParsingException(formatException("Invalid escape character", index))
+                        });
+
+                        continue;
+                    }
+
+                    value.Append(c);
+                }
+
+                return new Statement.StringLiteral(new IEPosition(path, input, start), value.ToString());
+            }
+
             Statement parseTarget()
             {
                 int start = index;
@@ -224,55 +277,9 @@ namespace InterEx
                     return new Statement.NumberLiteral(new IEPosition(path, input, start), number);
                 }
 
-                if (consume("\""))
-                {
-                    var value = new StringBuilder();
-                    while (!isDone())
-                    {
-                        var c = input[index];
-                        index++;
-
-                        if (c == '"') break;
-                        if (c == '\\')
-                        {
-                            if (isDone()) throw new IEParsingException(formatException("Unexpected EOF", index));
-
-                            var e = input[index];
-                            index++;
-                            if (e == 'x')
-                            {
-                                var a = input[index];
-                                index++;
-                                if (isDone()) throw new IEParsingException(formatException("Unexpected EOF", index));
-                                var b = input[index];
-                                index++;
-                                if (!UInt16.TryParse(new char[] { a, b }, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var charValue))
-                                {
-                                    throw new IEParsingException(formatException("Invalid number", index));
-                                }
-                                value.Append((char)charValue);
-                                continue;
-                            }
-
-                            value.Append(e switch
-                            {
-                                'n' => '\n',
-                                'r' => '\r',
-                                't' => '\t',
-                                '\'' => '\'',
-                                '"' => '"',
-                                '\\' => '\\',
-                                _ => throw new IEParsingException(formatException("Invalid escape character", index))
-                            });
-
-                            continue;
-                        }
-
-                        value.Append(c);
-                    }
-
-                    return new Statement.StringLiteral(new IEPosition(path, input, start), value.ToString());
-                }
+                if (consume("\"")) return parseString('"');
+                if (consume("'")) return parseString('\'');
+                if (consume("`")) return parseString('`');
 
                 if (consume("$"))
                 {
