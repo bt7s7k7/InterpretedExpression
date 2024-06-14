@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 
 namespace InterEx
@@ -6,7 +7,7 @@ namespace InterEx
     {
         public readonly string Format(string message)
         {
-            var lineStart = this.Content.LastIndexOf('\n', this.Index);
+            var lineStart = this.Content.LastIndexOf('\n', Math.Min(this.Index, this.Content.Length - 1));
             if (lineStart == -1) lineStart = 0;
             else lineStart++;
             var lineNum = this.Content.Take(lineStart).Count(v => v == '\n') + 1;
