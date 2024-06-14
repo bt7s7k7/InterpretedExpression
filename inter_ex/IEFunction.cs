@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace InterEx
 {
-    public partial record class IEFunction(IEEngine Engine, List<string> Parameters, Statement Root, IEEngine.Scope Scope)
+    public partial record class IEFunction(IEEngine Engine, IList<string> Parameters, Statement Root, IEEngine.Scope Scope)
     {
         public IEEngine.Value InvokeRaw(IEEngine.Value[] arguments)
         {
