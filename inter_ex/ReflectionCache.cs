@@ -74,6 +74,7 @@ namespace InterEx
 
             foreach (var method in type.GetMethods(flags))
             {
+                if (method.ContainsGenericParameters) continue;
                 info.AddFunction(method.Name, new FunctionInfo(method));
             }
 
