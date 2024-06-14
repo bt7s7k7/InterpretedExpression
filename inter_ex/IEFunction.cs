@@ -6,7 +6,7 @@ namespace InterEx
     {
         public IEEngine.Value InvokeRaw(IEEngine.Value[] arguments)
         {
-            if (this.Parameters.Count != arguments.Length)
+            if (this.Parameters.Count > arguments.Length)
             {
                 throw new IERuntimeException($"Argument type mismatch, expected {this.Parameters.Count}, but got {arguments.Length}");
             }
