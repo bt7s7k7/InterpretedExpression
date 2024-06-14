@@ -129,7 +129,7 @@ namespace InterEx
                 }
                 catch (IERuntimeException error)
                 {
-                    throw new IERuntimeException($"Argument type mismatch in ({String.Join(", ", parameters.Select(v => v.FullName))})[{i}]", error.Message);
+                    throw new IERuntimeException($"Argument type mismatch in ({String.Join(", ", parameters.Select(v => v.FullName))})[{i}]", error);
                 }
             }
 
