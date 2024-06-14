@@ -104,6 +104,8 @@ namespace InterEx
 
         public object[] ExportArguments(Value[] arguments, Type[] parameters)
         {
+            if (parameters == null) return arguments.Cast<object>().ToArray();
+
             if (arguments.Length != parameters.Length)
             {
                 throw new IERuntimeException($"Argument count mismatch, got {arguments.Length}, but expected {parameters.Length} ({String.Join(", ", parameters.Select(v => v.FullName))})");
@@ -148,6 +150,7 @@ namespace InterEx
             else if (target is ReflectionCache.VariadicFunction variadic)
             {
                 var exportedArguments = this.ExportArguments(arguments, function.Parameters);
+                if (receiver.Content != null) exportedArguments = new[] { receiver.Content }.Concat(exportedArguments).ToArray();
                 result = variadic(exportedArguments);
             }
             else if (target is Delegate @delegate)

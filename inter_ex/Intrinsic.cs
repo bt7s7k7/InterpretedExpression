@@ -100,6 +100,38 @@ namespace InterEx
                             foreach (var value in values) result.Add(value);
                             return result;
                         }, Array.Empty<Type>()));
+
+                        info.AddFunction("init", new((IDictionary receiver, Dictionary<string, Value> literal) =>
+                        {
+                            foreach (var (key, value) in literal)
+                            {
+                                receiver.Add(key, this.ExportValue(value, valueType));
+                            }
+
+                            return receiver;
+                        }, new[] { typeof(Dictionary<string, Value>) }));
+                    }
+                }
+
+                if (type.IsAssignableTo(typeof(IList)))
+                {
+                    var listInterface = type.GetInterfaces().First(v => v.GetGenericTypeDefinition() == IntrinsicSource.ListType);
+                    if (listInterface != null)
+                    {
+                        var genericParameters = listInterface.GetGenericArguments();
+                        var valueType = genericParameters[0];
+
+                        info.AddFunction("init", new((ReflectionCache.VariadicFunction)((object[] arguments) =>
+                        {
+                            var receiver = (IList)arguments[0];
+
+                            foreach (var element in arguments.Skip(1).Cast<Value>())
+                            {
+                                receiver.Add(this.ExportValue(element, valueType));
+                            }
+
+                            return receiver;
+                        }), null));
                     }
                 }
             });
