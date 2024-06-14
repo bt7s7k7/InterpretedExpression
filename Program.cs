@@ -6,7 +6,7 @@ var engine = new IEEngine();
 
 var path = "./example/sample.ie";
 
-engine.AddProviderFallback(new ReflectionValueProvider().AddAllAssemblies());
+new ReflectionValueProvider(engine).AddAllAssemblies();
 
 var argv = Environment.GetCommandLineArgs();
 Console.WriteLine(String.Join(", ", argv));
@@ -22,7 +22,7 @@ if (argv is [_, "repl"])
             Console.WriteLine(document.ToJson());
 
             var result = engine.Evaluate(document.Root, engine.PrepareCall());
-            Console.WriteLine(result.Content ?? "null");
+            Console.WriteLine(result.ToString());
         }
         catch (IEParsingException error)
         {
@@ -51,7 +51,7 @@ else if (argv is [_, "loop"])
             Console.WriteLine(document.ToJson());
 
             var result = engine.Evaluate(document.Root, engine.PrepareCall());
-            Console.WriteLine(result.Content ?? "null");
+            Console.WriteLine(result.ToString());
         }
         catch (IEParsingException error)
         {
@@ -81,7 +81,7 @@ else
         Console.WriteLine(document.ToJson());
 
         var result = engine.Evaluate(document.Root, engine.PrepareCall());
-        Console.WriteLine(result.Content ?? "null");
+        Console.WriteLine(result.ToString());
     }
     catch (IEParsingException error)
     {

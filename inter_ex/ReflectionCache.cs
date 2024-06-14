@@ -11,6 +11,8 @@ namespace InterEx
         public enum BindingType { Static, Instance }
         public BindingType Binding;
 
+        public delegate object VariadicFunction(object[] arguments);
+
         public class FunctionInfo
         {
             public readonly object Target;
@@ -26,6 +28,12 @@ namespace InterEx
             {
                 this.Target = method;
                 this.Parameters = method.GetParameters().Select(v => v.ParameterType).ToArray();
+            }
+
+            public FunctionInfo(VariadicFunction target, Type[] parameters)
+            {
+                this.Target = target;
+                this.Parameters = parameters;
             }
 
             public FunctionInfo(Delegate target, Type[] parameters)

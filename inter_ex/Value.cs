@@ -11,6 +11,11 @@ namespace InterEx
         {
             public readonly object Content;
 
+            public override string ToString()
+            {
+                return this.Content == null ? "null" : this.Content.ToString();
+            }
+
             public Value(object content)
             {
                 this.Content = content;
@@ -139,6 +144,11 @@ namespace InterEx
             {
                 var exportedArguments = this.ExportArguments(arguments, function.Parameters);
                 result = constructor.Invoke(exportedArguments);
+            }
+            else if (target is ReflectionCache.VariadicFunction variadic)
+            {
+                var exportedArguments = this.ExportArguments(arguments, function.Parameters);
+                result = variadic(exportedArguments);
             }
             else if (target is Delegate @delegate)
             {

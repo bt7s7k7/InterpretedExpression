@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace InterEx
 {
-    public class ReflectionValueProvider : IEEngine.IValueProvider
+    public class ReflectionValueProvider : IEEngine.IValueProvider, IEEngine.IValueExporter
     {
-        protected readonly ReflectionCache _reflectionCache = new(ReflectionCache.BindingType.Static);
-
         public class EntityInfo : ICustomValue
         {
             public String Name;
@@ -22,9 +21,40 @@ namespace InterEx
             public readonly Dictionary<string, EntityInfo> Members = new();
 
             public Type Class = null;
+            public List<ReflectionCache.FunctionInfo> Generics = null;
+
+            public void AddGeneric(Type type)
+            {
+                var parameters = type.GetTypeInfo().GenericTypeParameters;
+                var factoryParameters = Enumerable.Repeat(typeof(Type), parameters.Length).ToArray();
+                var cache = new Dictionary<string, EntityInfo>();
+                var name = this.Name;
+                var owner = this.Owner;
+
+                this.Generics ??= new();
+                this.Generics.Add(new((ReflectionCache.VariadicFunction)((arguments) =>
+                {
+                    var typeArguments = arguments.Cast<Type>().ToArray();
+                    var cacheKey = $"<{String.Join(", ", (IEnumerable<Type>)typeArguments)}>";
+                    if (cache.TryGetValue(cacheKey, out var existing)) return existing;
+
+                    var genericResult = type.MakeGenericType(typeArguments);
+                    var genericName = name + cacheKey;
+                    var entity = new EntityInfo(owner, genericName) { Class = genericResult };
+                    cache.Add(cacheKey, entity);
+
+                    return entity;
+                }), factoryParameters));
+            }
 
             public virtual bool Get(IEEngine engine, string name, out IEEngine.Value value)
             {
+                if (name == "o_Members")
+                {
+                    value = engine.ImportValue(this.Members);
+                    return true;
+                }
+
                 if (this.Members.TryGetValue(name, out var entity))
                 {
                     value = new IEEngine.Value(entity);
@@ -33,7 +63,7 @@ namespace InterEx
 
                 if (this.Class != null)
                 {
-                    var info = this.Owner._reflectionCache.GetClassInfo(this.Class);
+                    var info = this.Owner.Engine.StaticCache.GetClassInfo(this.Class);
                     if (info.Properties.TryGetValue(name, out var member))
                     {
                         if (member is PropertyInfo property)
@@ -61,17 +91,23 @@ namespace InterEx
                     return constructor.Invoke(engine, invocation, "", out result, arguments);
                 }
 
-                if (this.Class == null)
+                if (this.Class != null)
                 {
-                    result = default;
-                    return false;
+                    var info = this.Owner.Engine.StaticCache.GetClassInfo(this.Class);
+                    if (!info.Functions.TryGetValue(name, out var overloads)) { result = default; return false; };
+
+                    result = engine.BridgeMethodCall(overloads, invocation, new IEEngine.Value(null), arguments);
+                    return true;
                 }
 
-                var info = this.Owner._reflectionCache.GetClassInfo(this.Class);
-                if (!info.Functions.TryGetValue(name, out var overloads)) { result = default; return false; };
+                if (this.Generics != null)
+                {
+                    result = engine.BridgeMethodCall(this.Generics, invocation, new IEEngine.Value(null), arguments);
+                    return true;
+                }
 
-                result = engine.BridgeMethodCall(overloads, invocation, new IEEngine.Value(null), arguments);
-                return true;
+                result = default;
+                return false;
             }
 
             public bool Set(IEEngine engine, string name, IEEngine.Value value)
@@ -89,14 +125,21 @@ namespace InterEx
 
             public override string ToString()
             {
-                return $"({(this.Class == null ? "namespace" : "class")}){this.Name}";
+                return $"({this switch
+                {
+                    { Class: not null } => "class",
+                    { Generics: not null } => "generic",
+                    _ => "namespace"
+                }}){this.Name}";
             }
         }
 
         protected EntityInfo GetEntity(string path)
         {
             var result = this._global;
-            var segments = path.Split(".");
+            var segments = path
+                .Split(new[] { '.', '+' })
+                .Select(v => v.Split('`')[0]);
 
             foreach (var segment in segments)
             {
@@ -109,7 +152,17 @@ namespace InterEx
         public ReflectionValueProvider AddClass(Type type)
         {
             var path = type.FullName;
-            this.GetEntity(path).Class = type;
+            var entity = this.GetEntity(path);
+
+            if (type.IsGenericTypeDefinition)
+            {
+                entity.AddGeneric(type);
+            }
+            else
+            {
+                entity.Class = type;
+            }
+
             return this;
         }
 
@@ -132,13 +185,17 @@ namespace InterEx
             return this;
         }
 
-
         protected readonly EntityInfo _global;
         protected readonly List<EntityInfo> _usings = new();
+        public readonly IEEngine Engine;
 
-        public ReflectionValueProvider()
+        public ReflectionValueProvider(IEEngine engine)
         {
             this._global = new EntityInfo(this, "");
+            this.Engine = engine;
+
+            this.Engine.AddExporter(this);
+            this.Engine.AddProvider(this);
         }
 
         protected void Using(IEEngine engine, Statement target, IEEngine.Scope scope)
@@ -149,7 +206,7 @@ namespace InterEx
             this._usings.Add(entity);
         }
 
-        public bool Find(IEEngine engine, string name, out IEEngine.Value value)
+        bool IEEngine.IValueProvider.Find(IEEngine engine, string name, out IEEngine.Value value)
         {
             if (name == "k_Using")
             {
@@ -168,6 +225,18 @@ namespace InterEx
             if (this._global.Members.TryGetValue(name, out entity)) { value = new IEEngine.Value(entity); return true; }
 
             value = default;
+            return false;
+        }
+
+        bool IEEngine.IValueExporter.Export(IEEngine.Value value, Type type, out object data)
+        {
+            if (type == typeof(Type) && value.Content is EntityInfo entityInfo && entityInfo.Class != null)
+            {
+                data = entityInfo.Class;
+                return true;
+            }
+
+            data = null;
             return false;
         }
     }
