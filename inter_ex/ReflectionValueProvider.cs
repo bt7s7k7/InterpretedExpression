@@ -125,12 +125,12 @@ namespace InterEx
 
             public override string ToString()
             {
-                return $"({this switch
+                return "(" + (this switch
                 {
                     { Class: not null } => "class",
                     { Generics: not null } => "generic",
                     _ => "namespace"
-                }}){this.Name}";
+                }) + ")" + this.Name;
             }
         }
 
