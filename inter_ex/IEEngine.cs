@@ -80,31 +80,26 @@ namespace InterEx
             if (receiver.Content is ICustomValue customValue)
             {
                 if (customValue.Invoke(this, invocation, method, out var result, arguments)) return result;
-
-                if (method == "")
-                {
-                    throw new IERuntimeException($"Object is not invocable");
-                }
-                throw new IERuntimeException($"Object does not contain method '{method}'");
             }
 
             var type = receiver.Content?.GetType();
             var info = type == null ? null : this.InstanceCache.GetClassInfo(type);
 
             if (method == "") method = "Invoke";
-            if (info == null || !info.Functions.TryGetValue(method, out var overloads))
-            {
-                var operators = this._operatorCache.GetClassInfo(typeof(IEOperators));
-                if (operators.Functions.TryGetValue(method, out var operatorMethod))
-                {
-                    var operatorArguments = new[] { receiver }.Concat(arguments).ToArray();
-                    return this.BridgeMethodCall(operatorMethod, invocation, new(null), operatorArguments);
-                }
 
-                throw new IERuntimeException($"Object does not contain method '{method}'");
+            if (info != null && info.Functions.TryGetValue(method, out var overloads))
+            {
+                return this.BridgeMethodCall(overloads, invocation, receiver, arguments);
             }
 
-            return this.BridgeMethodCall(overloads, invocation, receiver, arguments);
+            var operators = this._operatorCache.GetClassInfo(typeof(IEOperators));
+            if (operators.Functions.TryGetValue(method, out var operatorMethod))
+            {
+                var operatorArguments = new[] { receiver }.Concat(arguments).ToArray();
+                return this.BridgeMethodCall(operatorMethod, invocation, new(null), operatorArguments);
+            }
+
+            throw new IERuntimeException($"Object '{type}' does not contain method '{method}'");
         }
 
         public Variable GetVariable(string name, IEPosition position, Scope scope)
