@@ -201,7 +201,7 @@ namespace InterEx
         protected void Using(IEEngine engine, Statement target, IEEngine.Scope scope)
         {
             var targetValue = engine.Evaluate(target, scope);
-            var entity = (EntityInfo)engine.ExportValue(targetValue, typeof(EntityInfo));
+            var entity = engine.ExportValue<EntityInfo>(targetValue);
             if (this._usings.Contains(entity)) return;
             this._usings.Add(entity);
         }

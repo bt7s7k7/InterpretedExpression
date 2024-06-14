@@ -102,6 +102,11 @@ namespace InterEx
             throw new IERuntimeException("Cannot convert value " + value.Content?.GetType().FullName + " into " + type.FullName);
         }
 
+        public T ExportValue<T>(Value value)
+        {
+            return (T)this.ExportValue(value, typeof(T));
+        }
+
         public object[] ExportArguments(Value[] arguments, Type[] parameters)
         {
             if (parameters == null) return arguments.Cast<object>().ToArray();

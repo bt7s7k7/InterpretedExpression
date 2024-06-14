@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace InterEx
 {
@@ -18,6 +19,16 @@ namespace InterEx
             }
 
             return this.Engine.Evaluate(this.Root, innerScope);
+        }
+
+        public T Invoke<T>(params object[] arguments)
+        {
+            return this.Engine.ExportValue<T>(this.InvokeRaw(arguments.Select(this.Engine.ImportValue).ToArray()));
+        }
+
+        public void Invoke(params object[] arguments)
+        {
+            this.InvokeRaw(arguments.Select(this.Engine.ImportValue).ToArray());
         }
     }
 }

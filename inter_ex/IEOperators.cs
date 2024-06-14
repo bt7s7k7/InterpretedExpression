@@ -42,7 +42,7 @@ namespace InterEx
         {
             var predicate = engine.Evaluate(predicateStmt, scope);
             var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<IEEngine.Value>());
-            var predicateValue = (bool)engine.ExportValue(predicateBool, typeof(bool));
+            var predicateValue = engine.ExportValue<bool>(predicateBool);
 
             if (predicateValue)
             {
@@ -59,7 +59,7 @@ namespace InterEx
         {
             var predicate = engine.Evaluate(predicateStmt, scope);
             var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<IEEngine.Value>());
-            var predicateValue = (bool)engine.ExportValue(predicateBool, typeof(bool));
+            var predicateValue = engine.ExportValue<bool>(predicateBool);
 
             if (!predicateValue)
             {
@@ -80,7 +80,7 @@ namespace InterEx
             {
                 var predicate = engine.Evaluate(predicateStmt, scope);
                 var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<IEEngine.Value>());
-                var predicateValue = (bool)engine.ExportValue(predicateBool, typeof(bool));
+                var predicateValue = engine.ExportValue<bool>(predicateBool);
                 if (!predicateValue) break;
 
                 engine.Evaluate(exprStmt, innerScope);
@@ -92,9 +92,7 @@ namespace InterEx
             var i = 0;
             foreach (var element in enumerable)
             {
-                var elementValue = callback.Engine.ImportValue(element);
-                var indexValue = callback.Engine.ImportValue(i);
-                callback.InvokeRaw(new[] { elementValue, indexValue });
+                callback.Invoke(element, i);
                 i++;
             }
         }
