@@ -38,6 +38,12 @@ namespace InterEx
                     }
                 }
 
+                if (type == typeof(string))
+                {
+                    data = value.Content?.ToString() ?? "null";
+                    return true;
+                }
+
                 data = default;
                 return false;
             }
