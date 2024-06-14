@@ -360,6 +360,17 @@ namespace InterEx
                 while (!isDone())
                 {
                     skipWhitespace();
+
+                    if (consume("."))
+                    {
+                        var start = index;
+                        var member = consumeWord();
+                        if (member == "") throw new IEParsingException(formatException("Expected member name", index));
+
+                        target = new Statement.MemberAccess(new IEPosition(path, input, start), target, member);
+                        continue;
+                    }
+
                     if (skippedNewline) break;
 
                     if (consume("("))
@@ -375,16 +386,6 @@ namespace InterEx
                         var position = target.Position;
 
                         target = new Statement.Invocation(position, receiver, method, arguments);
-                        continue;
-                    }
-
-                    if (consume("."))
-                    {
-                        var start = index;
-                        var member = consumeWord();
-                        if (member == "") throw new IEParsingException(formatException("Expected member name", index));
-
-                        target = new Statement.MemberAccess(new IEPosition(path, input, start), target, member);
                         continue;
                     }
 
