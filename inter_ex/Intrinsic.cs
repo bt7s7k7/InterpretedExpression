@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace InterEx
 {
@@ -54,6 +55,10 @@ namespace InterEx
 
             protected IntrinsicSource() { }
             public static readonly IntrinsicSource Instance = new();
+
+            public static readonly Type DictionaryType = typeof(IDictionary<string, string>).GetGenericTypeDefinition();
+            public static readonly Type ListType = typeof(IList<string>).GetGenericTypeDefinition();
+            public static readonly Type ListResultType = typeof(List<string>).GetGenericTypeDefinition();
         }
 
         public IEEngine()
@@ -64,6 +69,40 @@ namespace InterEx
             this.AddGlobal("true", true);
             this.AddGlobal("false", false);
             this.AddGlobal("null", null);
+
+            this.InstanceCache.AddPatcher((_, type, info) =>
+            {
+                if (type.IsAssignableTo(typeof(IDictionary)))
+                {
+                    var dictionaryInterface = type.GetInterfaces().First(v => v.GetGenericTypeDefinition() == IntrinsicSource.DictionaryType);
+                    if (dictionaryInterface != null)
+                    {
+                        var genericParameters = dictionaryInterface.GetGenericArguments();
+                        var keyType = genericParameters[0];
+                        var valueType = genericParameters[1];
+                        var keysResultType = IntrinsicSource.ListResultType.MakeGenericType(new[] { keyType });
+                        var keysResultCtor = keysResultType.GetConstructor(Array.Empty<Type>());
+                        var valuesResultType = IntrinsicSource.ListResultType.MakeGenericType(new[] { valueType });
+                        var valuesResultCtor = valuesResultType.GetConstructor(Array.Empty<Type>());
+
+                        info.AddFunction("keys", new((IDictionary receiver) =>
+                        {
+                            var keys = receiver.Keys;
+                            var result = (IList)keysResultCtor.Invoke(Array.Empty<object>());
+                            foreach (var key in keys) result.Add(key);
+                            return result;
+                        }, Array.Empty<Type>()));
+
+                        info.AddFunction("values", new((IDictionary receiver) =>
+                        {
+                            var values = receiver.Values;
+                            var result = (IList)valuesResultCtor.Invoke(Array.Empty<object>());
+                            foreach (var value in values) result.Add(value);
+                            return result;
+                        }, Array.Empty<Type>()));
+                    }
+                }
+            });
         }
     }
 }

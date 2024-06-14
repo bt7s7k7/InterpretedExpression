@@ -86,5 +86,17 @@ namespace InterEx
                 engine.Evaluate(exprStmt, innerScope);
             }
         }
+
+        public static void forEach(IEnumerable enumerable, IEFunction callback)
+        {
+            var i = 0;
+            foreach (var element in enumerable)
+            {
+                var elementValue = callback.Engine.ImportValue(element);
+                var indexValue = callback.Engine.ImportValue(i);
+                callback.InvokeRaw(new[] { elementValue, indexValue });
+                i++;
+            }
+        }
     }
 }
