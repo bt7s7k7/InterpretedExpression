@@ -75,6 +75,8 @@ namespace InterEx
             this.AddGlobal("true", true);
             this.AddGlobal("false", false);
             this.AddGlobal("null", null);
+            this.AddGlobal("GLOBAL", this.GlobalScope);
+            this.AddGlobal("ENGINE", this);
 
             this.InstanceCache.AddPatcher((_, type, info) =>
             {
