@@ -11,7 +11,7 @@ namespace InterEx
             if (lineStart == -1) lineStart = 0;
             else lineStart++;
             var lineNum = this.Content.Take(lineStart).Count(v => v == '\n') + 1;
-            var charNum = this.Index - lineStart;
+            var charNum = Math.Max(1, this.Index - lineStart);
 
             return $"{message} at {this.Path}:{lineNum}:{charNum}";
         }
