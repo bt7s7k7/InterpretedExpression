@@ -176,6 +176,30 @@ namespace InterEx
                         continue;
                     }
 
+                    if (consume("/*"))
+                    {
+                        var depth = 1;
+
+                        while (!isDone() && depth > 0)
+                        {
+                            if (consume("/*"))
+                            {
+                                depth++;
+                                continue;
+                            }
+
+                            if (consume("*/"))
+                            {
+                                depth--;
+                                continue;
+                            }
+
+                            index++;
+                        }
+
+                        continue;
+                    }
+
                     break;
                 }
 
@@ -190,6 +214,8 @@ namespace InterEx
                 while (!isDone())
                 {
                     skipWhitespace();
+                    if (isDone()) break;
+
                     if (term != null && consume(term)) break;
                     if (consume(",")) continue;
                     result.Add(parseExpression());
