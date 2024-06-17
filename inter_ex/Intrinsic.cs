@@ -118,6 +118,8 @@ namespace InterEx
 
                             return receiver;
                         }, new[] { typeof(Dictionary<string, Value>) }));
+
+                        return;
                     }
                 }
 
@@ -140,8 +142,20 @@ namespace InterEx
 
                             return receiver;
                         }), null));
+
+                        return;
                     }
                 }
+
+                info.AddFunction("init", new((object receiver, Dictionary<string, Value> literal) =>
+                {
+                    foreach (var (key, value) in literal)
+                    {
+                        this.SetProperty(new Value(receiver), key, value);
+                    }
+
+                    return receiver;
+                }, new[] { typeof(Dictionary<string, Value>) }));
             });
         }
     }
