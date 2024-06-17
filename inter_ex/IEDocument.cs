@@ -98,7 +98,7 @@ namespace InterEx
             bool matches(string value)
             {
                 if (index + value.Length > input.Length) return false;
-                return input[index..(index + value.Length)] == value;
+                return input.AsSpan(index, value.Length).Equals(value, StringComparison.Ordinal);
             }
 
             bool consume(string value)
@@ -112,15 +112,15 @@ namespace InterEx
                 return false;
             }
 
-            string readWhile(Func<bool> predicate)
+            ReadOnlySpan<char> readWhile(Func<bool> predicate)
             {
                 var start = index;
                 skipWhile(predicate);
                 var end = index;
-                return input[start..end];
+                return input.AsSpan(start, end - start);
             }
 
-            string consumeWord()
+            ReadOnlySpan<char> consumeWord()
             {
                 return readWhile(() =>
                 {
@@ -245,12 +245,11 @@ namespace InterEx
                         index++;
                         if (e == 'x')
                         {
-                            var a = input[index];
+                            var charStart = index;
                             index++;
                             if (isDone()) throw new IEParsingException(formatException("Unexpected EOF", index));
-                            var b = input[index];
                             index++;
-                            if (!UInt16.TryParse(new char[] { a, b }, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var charValue))
+                            if (!Byte.TryParse(input.AsSpan(charStart, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var charValue))
                             {
                                 throw new IEParsingException(formatException("Invalid number", index));
                             }
@@ -285,17 +284,18 @@ namespace InterEx
 
                 if (input[index] is >= '0' and <= '9' or '-')
                 {
-                    var numberText = "";
-                    if (consume("-")) numberText = "-";
+                    var numberText = new StringBuilder();
+                    if (consume("-")) numberText.Append('-');
 
-                    numberText += readWhile(() => input[index] is >= '0' and <= '9');
+                    numberText.Append(readWhile(() => input[index] is >= '0' and <= '9'));
 
                     if (consume("."))
                     {
-                        numberText += "." + readWhile(() => input[index] is >= '0' and <= '9');
+                        numberText.Append('.');
+                        numberText.Append(readWhile(() => input[index] is >= '0' and <= '9'));
                     }
 
-                    if (!Double.TryParse(numberText, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number))
+                    if (!Double.TryParse(numberText.ToString(), NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number))
                     {
                         throw new IEParsingException(formatException("Invalid number", index));
                     }
@@ -312,7 +312,7 @@ namespace InterEx
                     var name = consumeWord();
                     if (name == "") throw new IEParsingException(formatException("Missing variable name", index));
 
-                    return new Statement.VariableDeclaration(new IEPosition(path, input, start), name);
+                    return new Statement.VariableDeclaration(new IEPosition(path, input, start), name.ToString());
                 }
 
                 if (consume("("))
@@ -333,7 +333,7 @@ namespace InterEx
 
                         var propStart = index;
 
-                        var name = consumeWord();
+                        var name = consumeWord().ToString();
                         if (name == "") throw new IEParsingException(formatException("Missing property name", index));
 
                         skipWhitespace();
@@ -368,8 +368,8 @@ namespace InterEx
                             if (consume(")")) break;
                             if (consume(",")) continue;
                             var parameter = consumeWord();
-                            if (parameter == "") throw new IEParsingException(formatException("Expected token", index));
-                            parameters.Add(parameter);
+                            if (parameter.IsEmpty) throw new IEParsingException(formatException("Expected token", index));
+                            parameters.Add(parameter.ToString());
                         }
                     }
 
@@ -382,8 +382,8 @@ namespace InterEx
                 }
 
                 var variable = consumeWord();
-                if (variable == "") throw new IEParsingException(formatException("Expected token", index));
-                return new Statement.VariableAccess(new IEPosition(path, input, start), variable);
+                if (variable.IsEmpty) throw new IEParsingException(formatException("Expected token", index));
+                return new Statement.VariableAccess(new IEPosition(path, input, start), variable.ToString());
             }
 
             Statement parseExpression()
@@ -398,9 +398,9 @@ namespace InterEx
                     {
                         var start = index;
                         var member = consumeWord();
-                        if (member == "") throw new IEParsingException(formatException("Expected member name", index));
+                        if (member.IsEmpty) throw new IEParsingException(formatException("Expected member name", index));
 
-                        target = new Statement.MemberAccess(new IEPosition(path, input, start), target, member);
+                        target = new Statement.MemberAccess(new IEPosition(path, input, start), target, member.ToString());
                         continue;
                     }
 
