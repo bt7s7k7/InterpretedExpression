@@ -228,7 +228,7 @@ namespace InterEx
             return false;
         }
 
-        bool IEEngine.IValueExporter.Export(IEEngine.Value value, Type type, out object data)
+        bool IEEngine.IValueExporter.Export(IEEngine _, IEEngine.Value value, Type type, out object data)
         {
             if (type == typeof(Type) && value.Content is EntityInfo entityInfo && entityInfo.Class != null)
             {

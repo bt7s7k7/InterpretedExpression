@@ -9,7 +9,7 @@ namespace InterEx
     {
         private class IntrinsicSource : IValueImporter, IValueExporter
         {
-            public bool Export(Value value, Type type, out object data)
+            public bool Export(IEEngine engine, Value value, Type type, out object data)
             {
                 if (value.Content is double number)
                 {
@@ -44,11 +44,18 @@ namespace InterEx
                     return true;
                 }
 
+                if (value.Content is IEFunction function && engine.Delegates.IsDelegate(type))
+                {
+                    var adapter = engine.Delegates.GetAdapter(type);
+                    data = adapter.Adapt(function);
+                    return true;
+                }
+
                 data = default;
                 return false;
             }
 
-            public bool Import(object data, out Value value)
+            public bool Import(IEEngine _, object data, out Value value)
             {
                 if (data is int @int) { value = new Value((double)@int); return true; }
                 if (data is short @short) { value = new Value((double)@short); return true; }
@@ -69,6 +76,10 @@ namespace InterEx
 
         public IEEngine()
         {
+            this.InstanceCache = new(ReflectionCache.BindingType.Instance);
+            this.StaticCache = new(ReflectionCache.BindingType.Static);
+            this.Delegates = new(this.InstanceCache);
+
             this.AddExporter(IntrinsicSource.Instance);
             this.AddImporter(IntrinsicSource.Instance);
 

@@ -24,12 +24,12 @@ namespace InterEx
 
         public interface IValueImporter
         {
-            public bool Import(object data, out Value value);
+            public bool Import(IEEngine engine, object data, out Value value);
         }
 
         public interface IValueExporter
         {
-            public bool Export(Value value, Type type, out object data);
+            public bool Export(IEEngine engine, Value value, Type type, out object data);
         }
 
         public interface IValueProvider
@@ -64,7 +64,7 @@ namespace InterEx
 
             foreach (var importer in this._importers)
             {
-                if (importer.Import(data, out var value)) return value;
+                if (importer.Import(this, data, out var value)) return value;
             }
 
             return new Value(data);
@@ -86,7 +86,7 @@ namespace InterEx
 
             foreach (var exporter in this._exporters)
             {
-                if (exporter.Export(value, type, out var data)) return data;
+                if (exporter.Export(this, value, type, out var data)) return data;
             }
 
             if (type == typeof(object))
@@ -96,7 +96,7 @@ namespace InterEx
 
             foreach (var exporter in this._exportersFallback)
             {
-                if (exporter.Export(value, type, out var data)) return data;
+                if (exporter.Export(this, value, type, out var data)) return data;
             }
 
             throw new IERuntimeException("Cannot convert value " + value.Content?.GetType().FullName + " into " + type.FullName);
