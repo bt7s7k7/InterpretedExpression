@@ -33,7 +33,7 @@ namespace InterEx
             var type = receiver.Content.GetType();
             var info = this.InstanceCache.GetClassInfo(type);
 
-            if (!info.Properties.TryGetValue(name, out var member)) throw new IERuntimeException($"Object does not contain property '{name}'");
+            if (!info.Properties.TryGetValue(name, out var member)) throw new IERuntimeException($"Object '{type}' does not contain property '{name}'");
 
             if (member is PropertyInfo property)
             {
@@ -52,13 +52,12 @@ namespace InterEx
             if (receiver.Content is ICustomValue customValue)
             {
                 if (customValue.Set(this, name, value)) return;
-                throw new IERuntimeException($"Object does not contain property '{name}'");
             }
 
             var type = receiver.Content.GetType();
             var info = this.InstanceCache.GetClassInfo(type);
 
-            if (!info.Properties.TryGetValue(name, out var member)) throw new IERuntimeException($"Object does not contain property '{name}'");
+            if (!info.Properties.TryGetValue(name, out var member)) throw new IERuntimeException($"Object '{type}' does not contain property '{name}'");
 
             if (member is PropertyInfo property)
             {
@@ -100,7 +99,7 @@ namespace InterEx
                 return this.BridgeMethodCall(operatorMethod, invocation, new(null), operatorArguments);
             }
 
-            throw new IERuntimeException($"Object '{type}' does not contain method '{method}'");
+            throw new IERuntimeException($"Object '{type?.ToString() ?? "null"}' does not contain method '{method}'");
         }
 
         public Variable GetVariable(string name, IEPosition position, Scope scope)
