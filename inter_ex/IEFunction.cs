@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -29,6 +30,11 @@ namespace InterEx
         public void Invoke(params object[] arguments)
         {
             this.InvokeRaw(arguments.Select(this.Engine.ImportValue).ToArray());
+        }
+
+        public object InvokeAndExport(Type resultType, object[] arguments)
+        {
+            return this.Engine.ExportValue(this.InvokeRaw(arguments.Select(this.Engine.ImportValue).ToArray()), resultType);
         }
     }
 }

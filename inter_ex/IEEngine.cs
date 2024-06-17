@@ -17,8 +17,9 @@ namespace InterEx
             variable.Content = content;
         }
 
-        public readonly ReflectionCache InstanceCache = new(ReflectionCache.BindingType.Instance);
-        public readonly ReflectionCache StaticCache = new(ReflectionCache.BindingType.Static);
+        public readonly ReflectionCache InstanceCache;
+        public readonly ReflectionCache StaticCache;
+        public readonly DelegateAdapterProvider Delegates;
         protected readonly ReflectionCache _operatorCache = new(ReflectionCache.BindingType.Static);
 
         public Value GetProperty(Value receiver, string name)
