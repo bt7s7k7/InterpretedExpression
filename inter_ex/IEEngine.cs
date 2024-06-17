@@ -278,7 +278,8 @@ namespace InterEx
             catch (Exception error)
             {
                 if (error is IERuntimeException) throw;
-                throw new IERuntimeException(statement.Position.Format("Native error: " + error.Message), error);
+                if (error.InnerException is IERuntimeException inner) throw new IERuntimeException(statement.Position.Format("Invalid operation"), inner);
+                throw new IERuntimeException(statement.Position.Format("Caught system exception"), error);
             }
         }
     }

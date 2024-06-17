@@ -27,6 +27,12 @@ if (argv is [_, "repl"])
         catch (IEParsingException error)
         {
             Console.WriteLine("[SYN] " + error.Message);
+            var inner = error.InnerException;
+            while (inner != null)
+            {
+                Console.WriteLine("    " + inner.Message);
+                inner = inner.InnerException;
+            }
         }
         catch (IERuntimeException error)
         {
@@ -56,6 +62,12 @@ else if (argv is [_, "loop"])
         catch (IEParsingException error)
         {
             Console.WriteLine("[SYN] " + error.Message);
+            var inner = error.InnerException;
+            while (inner != null)
+            {
+                Console.WriteLine("    " + inner.Message);
+                inner = inner.InnerException;
+            }
         }
         catch (IERuntimeException error)
         {
@@ -86,9 +98,21 @@ else
     catch (IEParsingException error)
     {
         Console.WriteLine("[SYN] " + error.Message);
+        var inner = error.InnerException;
+        while (inner != null)
+        {
+            Console.WriteLine("    " + inner.Message);
+            inner = inner.InnerException;
+        }
     }
     catch (IERuntimeException error)
     {
         Console.WriteLine("[ERR] " + error.Message);
+        var inner = error.InnerException;
+        while (inner != null)
+        {
+            Console.WriteLine("    " + inner.Message);
+            inner = inner.InnerException;
+        }
     }
 }
