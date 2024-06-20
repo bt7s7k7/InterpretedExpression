@@ -29,9 +29,13 @@ namespace InterEx
         public static string @string(object a) => a == null ? "null" : a.ToString();
 
         public static bool @bool(bool a) => a;
+        public static bool not(bool a) => !a;
         public static bool @bool(string a) => a != null && a.Length > 0;
+        public static bool not(string a) => a == null || a.Length == 0;
         public static bool @bool(double a) => a != 0;
+        public static bool not(double a) => a == 0;
         public static bool @bool(object a) => a != null;
+        public static bool not(object a) => a == null;
 
         public static double number(double a) => a;
         public static double number(string a) => Double.Parse(a, CultureInfo.InvariantCulture);
