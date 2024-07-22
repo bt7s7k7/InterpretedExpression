@@ -7,6 +7,20 @@ namespace InterEx
 {
     public partial class IEEngine
     {
+        public class IntegrationData
+        {
+            public readonly ReflectionCache InstanceCache;
+            public readonly ReflectionCache StaticCache;
+            public readonly DelegateAdapterProvider Delegates;
+
+            public IntegrationData()
+            {
+                this.InstanceCache = new ReflectionCache(ReflectionCache.BindingType.Instance);
+                this.StaticCache = new ReflectionCache(ReflectionCache.BindingType.Static);
+                this.Delegates = new DelegateAdapterProvider(this.InstanceCache);
+            }
+        }
+
         private class IntrinsicSource : IValueImporter, IValueExporter
         {
             public bool Export(IEEngine engine, Value value, Type type, out object data)
@@ -74,11 +88,14 @@ namespace InterEx
             public static readonly Type ListResultType = typeof(List<string>).GetGenericTypeDefinition();
         }
 
-        public IEEngine()
+        public IEEngine(IntegrationData integration = null)
         {
-            this.InstanceCache = new(ReflectionCache.BindingType.Instance);
-            this.StaticCache = new(ReflectionCache.BindingType.Static);
-            this.Delegates = new(this.InstanceCache);
+            integration ??= new();
+
+            this.Integration = integration;
+            this.StaticCache = integration.StaticCache;
+            this.InstanceCache = integration.InstanceCache;
+            this.Delegates = integration.Delegates;
 
             this.AddExporter(IntrinsicSource.Instance);
             this.AddImporter(IntrinsicSource.Instance);

@@ -17,10 +17,10 @@ namespace InterEx
             variable.Content = content;
         }
 
+        public readonly IntegrationData Integration;
         public readonly ReflectionCache InstanceCache;
         public readonly ReflectionCache StaticCache;
         public readonly DelegateAdapterProvider Delegates;
-        protected readonly ReflectionCache _operatorCache = new(ReflectionCache.BindingType.Static);
 
         public Value GetProperty(Value receiver, string name)
         {
@@ -93,7 +93,7 @@ namespace InterEx
                 return this.BridgeMethodCall(overloads, invocation, receiver, arguments);
             }
 
-            var operators = this._operatorCache.GetClassInfo(typeof(IEOperators));
+            var operators = this.StaticCache.GetClassInfo(typeof(IEOperators));
             if (operators.Functions.TryGetValue(method, out var operatorMethod))
             {
                 var operatorArguments = new[] { receiver }.Concat(arguments).ToArray();
