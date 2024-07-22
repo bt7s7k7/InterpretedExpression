@@ -189,13 +189,20 @@ namespace InterEx
         protected readonly List<EntityInfo> _usings = new();
         public readonly IEEngine Engine;
 
-        public ReflectionValueProvider(IEEngine engine)
+        protected ReflectionValueProvider(IEEngine engine)
         {
             this._global = new EntityInfo(this, "");
             this.Engine = engine;
+        }
 
-            this.Engine.AddExporter(this);
-            this.Engine.AddProvider(this);
+        public static ReflectionValueProvider CreateAndRegister(IEEngine engine)
+        {
+            var provider = new ReflectionValueProvider(engine);
+
+            engine.AddExporter(provider);
+            engine.AddProvider(provider);
+
+            return provider;
         }
 
         protected void Using(IEEngine engine, Statement target, IEEngine.Scope scope)
