@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 
 namespace InterEx
 {
@@ -88,6 +90,29 @@ namespace InterEx
                 if (!predicateValue) break;
 
                 engine.Evaluate(exprStmt, innerScope);
+            }
+        }
+
+        public static void k_Out(Statement sourceStmt, IEEngine engine, Statement nameStmt, IEEngine.Scope scope)
+        {
+            var sourceValue = engine.Evaluate(sourceStmt, scope);
+            if (nameStmt is not Statement.Group namesGroup) throw new IERuntimeException("Expected list of properties to destructure");
+            var names = namesGroup.Statements.Cast<Statement.VariableAccess>().Select(v => v.Name);
+
+            if (sourceValue.Content is Dictionary<string, IEEngine.Value> dict)
+            {
+                foreach (var name in names)
+                {
+                    if (!dict.TryGetValue(name, out var value)) throw new IERuntimeException($"Dictionary does not contain key '{name}'");
+                    scope.Declare(name).Content = engine.ImportValue(value);
+                }
+            }
+            else
+            {
+                foreach (var name in names)
+                {
+                    scope.Declare(name).Content = engine.GetProperty(sourceValue, name);
+                }
             }
         }
 
