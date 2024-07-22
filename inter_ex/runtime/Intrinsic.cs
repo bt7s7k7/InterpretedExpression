@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace InterEx
 {
@@ -63,6 +64,15 @@ namespace InterEx
                     var adapter = engine.Delegates.GetAdapter(type);
                     data = adapter.Adapt(function);
                     return true;
+                }
+
+                if (type.IsEnum && value.Content is string enumName)
+                {
+                    if (Enum.TryParse(type, enumName, out var enumValue))
+                    {
+                        data = enumValue;
+                        return true;
+                    }
                 }
 
                 data = default;
