@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using InterEx.CompilerInternals;
 
-namespace InterEx
+namespace InterEx.InterfaceTypes
 {
-    public partial record class IEFunction(IEEngine Engine, IList<string> Parameters, Statement Root, IEEngine.Scope Scope)
+    public partial record class IEFunction(IEEngine Engine, IList<string> Parameters, Statement Root, Scope Scope)
     {
-        public IEEngine.Value InvokeRaw(IEEngine.Value[] arguments)
+        public Value InvokeRaw(Value[] arguments)
         {
             if (this.Parameters.Count > arguments.Length)
             {

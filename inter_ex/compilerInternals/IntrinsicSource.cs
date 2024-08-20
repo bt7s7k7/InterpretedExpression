@@ -2,121 +2,98 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
+using InterEx.Integration;
+using InterEx.InterfaceTypes;
 
-namespace InterEx
+namespace InterEx.CompilerInternals
 {
-    public partial class IEEngine
+    public class IntrinsicSource : IValueImporter, IValueExporter
     {
-        public class IntegrationData
+        public bool Export(IEEngine engine, Value value, Type type, out object data)
         {
-            public readonly ReflectionCache InstanceCache;
-            public readonly ReflectionCache StaticCache;
-            public readonly DelegateAdapterProvider Delegates;
-
-            public IntegrationData()
+            if (value.Content is double number)
             {
-                this.InstanceCache = new ReflectionCache(ReflectionCache.BindingType.Instance);
-                this.StaticCache = new ReflectionCache(ReflectionCache.BindingType.Static);
-                this.Delegates = new DelegateAdapterProvider(this.InstanceCache);
+                if (type == typeof(int)) { data = (int)number; return true; };
+                if (type == typeof(float)) { data = (float)number; return true; };
+                if (type == typeof(short)) { data = (short)number; return true; };
+                if (type == typeof(long)) { data = (long)number; return true; };
             }
-        }
 
-        private class IntrinsicSource : IValueImporter, IValueExporter
-        {
-            public bool Export(IEEngine engine, Value value, Type type, out object data)
+            if (value.Content is IEnumerable enumerable)
             {
-                if (value.Content is double number)
+                if (type == typeof(IEnumerable<object>))
                 {
-                    if (type == typeof(int)) { data = (int)number; return true; };
-                    if (type == typeof(float)) { data = (float)number; return true; };
-                    if (type == typeof(short)) { data = (short)number; return true; };
-                    if (type == typeof(long)) { data = (long)number; return true; };
-                }
-
-                if (value.Content is IEnumerable enumerable)
-                {
-                    if (type == typeof(IEnumerable<object>))
-                    {
-                        var result = new List<object>();
-                        foreach (var element in enumerable) result.Add(element);
-                        data = result;
-                        return true;
-                    }
-
-                    if (type == typeof(IEnumerable<string>))
-                    {
-                        var result = new List<string>();
-                        foreach (var element in enumerable) result.Add(element == null ? "null" : element.ToString());
-                        data = result;
-                        return true;
-                    }
-                }
-
-                if (type == typeof(string))
-                {
-                    data = value.Content?.ToString() ?? "null";
+                    var result = new List<object>();
+                    foreach (var element in enumerable) result.Add(element);
+                    data = result;
                     return true;
                 }
 
-                if (value.Content is IEFunction function && engine.Delegates.IsDelegate(type))
+                if (type == typeof(IEnumerable<string>))
                 {
-                    var adapter = engine.Delegates.GetAdapter(type);
-                    data = adapter.Adapt(function);
+                    var result = new List<string>();
+                    foreach (var element in enumerable) result.Add(element == null ? "null" : element.ToString());
+                    data = result;
                     return true;
                 }
-
-                if (type.IsEnum && value.Content is string enumName)
-                {
-                    if (Enum.TryParse(type, enumName, out var enumValue))
-                    {
-                        data = enumValue;
-                        return true;
-                    }
-                }
-
-                data = default;
-                return false;
             }
 
-            public bool Import(IEEngine _, object data, out Value value)
+            if (type == typeof(string))
             {
-                if (data is int @int) { value = new Value((double)@int); return true; }
-                if (data is short @short) { value = new Value((double)@short); return true; }
-                if (data is float @float) { value = new Value((double)@float); return true; }
-                if (data is long @long) { value = new Value((double)@long); return true; }
-
-                value = default;
-                return false;
+                data = value.Content?.ToString() ?? "null";
+                return true;
             }
 
-            protected IntrinsicSource() { }
-            public static readonly IntrinsicSource Instance = new();
+            if (value.Content is IEFunction function && engine.Delegates.IsDelegate(type))
+            {
+                var adapter = engine.Delegates.GetAdapter(type);
+                data = adapter.Adapt(function);
+                return true;
+            }
 
-            public static readonly Type DictionaryType = typeof(IDictionary<string, string>).GetGenericTypeDefinition();
-            public static readonly Type ListType = typeof(IList<string>).GetGenericTypeDefinition();
-            public static readonly Type ListResultType = typeof(List<string>).GetGenericTypeDefinition();
+            if (type.IsEnum && value.Content is string enumName)
+            {
+                if (Enum.TryParse(type, enumName, out var enumValue))
+                {
+                    data = enumValue;
+                    return true;
+                }
+            }
+
+            data = default;
+            return false;
         }
 
-        public IEEngine(IntegrationData integration = null)
+        public bool Import(IEEngine _, object data, out Value value)
         {
-            integration ??= new();
+            if (data is int @int) { value = new Value((double)@int); return true; }
+            if (data is short @short) { value = new Value((double)@short); return true; }
+            if (data is float @float) { value = new Value((double)@float); return true; }
+            if (data is long @long) { value = new Value((double)@long); return true; }
 
-            this.Integration = integration;
-            this.StaticCache = integration.StaticCache;
-            this.InstanceCache = integration.InstanceCache;
-            this.Delegates = integration.Delegates;
+            value = default;
+            return false;
+        }
 
-            this.AddExporter(IntrinsicSource.Instance);
-            this.AddImporter(IntrinsicSource.Instance);
+        protected IntrinsicSource() { }
+        public static readonly IntrinsicSource Instance = new();
 
-            this.AddGlobal("true", true);
-            this.AddGlobal("false", false);
-            this.AddGlobal("null", null);
-            this.AddGlobal("GLOBAL", this.GlobalScope);
-            this.AddGlobal("ENGINE", this);
+        public static readonly Type DictionaryType = typeof(IDictionary<string, string>).GetGenericTypeDefinition();
+        public static readonly Type ListType = typeof(IList<string>).GetGenericTypeDefinition();
+        public static readonly Type ListResultType = typeof(List<string>).GetGenericTypeDefinition();
 
-            this.AddGlobal("k_Ref", (IEEngine engine, Statement value, Scope scope) =>
+        public static void InitializeIntrinsics(IEEngine engine)
+        {
+            engine.AddExporter(Instance);
+            engine.AddImporter(Instance);
+
+            engine.AddGlobal("true", true);
+            engine.AddGlobal("false", false);
+            engine.AddGlobal("null", null);
+            engine.AddGlobal("GLOBAL", engine.GlobalScope);
+            engine.AddGlobal("ENGINE", engine);
+
+            engine.AddGlobal("k_Ref", (IEEngine engine, Statement value, Scope scope) =>
             {
                 if (value is Statement.MemberAccess memberAccess)
                 {
@@ -132,7 +109,7 @@ namespace InterEx
                 else throw new IERuntimeException("Can only get reference to a variable or object property");
             });
 
-            this.InstanceCache.AddPatcher((_, type, info) =>
+            engine.InstanceCache.AddPatcher((_, type, info) =>
             {
                 if (type.IsAssignableTo(typeof(IDictionary)))
                 {
@@ -167,7 +144,7 @@ namespace InterEx
                         {
                             foreach (var (key, value) in literal)
                             {
-                                receiver.Add(key, this.ExportValue(value, valueType));
+                                receiver.Add(key, engine.ExportValue(value, valueType));
                             }
 
                             return receiver;
@@ -191,7 +168,7 @@ namespace InterEx
 
                             foreach (var element in arguments.Skip(1).Cast<Value>())
                             {
-                                receiver.Add(this.ExportValue(element, valueType));
+                                receiver.Add(engine.ExportValue(element, valueType));
                             }
 
                             return receiver;
@@ -205,7 +182,7 @@ namespace InterEx
                 {
                     foreach (var (key, value) in literal)
                     {
-                        this.SetProperty(new Value(receiver), key, value);
+                        engine.SetProperty(new Value(receiver), key, value);
                     }
 
                     return receiver;

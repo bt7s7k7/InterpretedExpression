@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using InterEx.CompilerInternals;
+using InterEx.Integration;
+using InterEx.InterfaceTypes;
 
 namespace InterEx
 {
-    public class ReflectionValueProvider : IEEngine.IValueProvider, IEEngine.IValueExporter
+    public class ReflectionValueProvider : IValueProvider, IValueExporter
     {
         public class EntityInfo : ICustomValue
         {
@@ -47,7 +50,7 @@ namespace InterEx
                 }), factoryParameters));
             }
 
-            public virtual bool Get(IEEngine engine, string name, out IEEngine.Value value)
+            public virtual bool Get(IEEngine engine, string name, out Value value)
             {
                 if (name == "o_Members")
                 {
@@ -57,7 +60,7 @@ namespace InterEx
 
                 if (this.Members.TryGetValue(name, out var entity))
                 {
-                    value = new IEEngine.Value(entity);
+                    value = new Value(entity);
                     return true;
                 }
 
@@ -84,7 +87,7 @@ namespace InterEx
                 return false;
             }
 
-            public virtual bool Invoke(IEEngine engine, Statement.Invocation invocation, string name, out IEEngine.Value result, IEEngine.Value[] arguments)
+            public virtual bool Invoke(IEEngine engine, Statement.Invocation invocation, string name, out Value result, Value[] arguments)
             {
                 if (this.Members.TryGetValue(name, out var constructor))
                 {
@@ -96,13 +99,13 @@ namespace InterEx
                     var info = this.Owner.Engine.StaticCache.GetClassInfo(this.Class);
                     if (!info.Functions.TryGetValue(name, out var overloads)) { result = default; return false; };
 
-                    result = engine.BridgeMethodCall(overloads, invocation, new IEEngine.Value(null), arguments);
+                    result = engine.BridgeMethodCall(overloads, invocation, new Value(null), arguments);
                     return true;
                 }
 
                 if (this.Generics != null)
                 {
-                    result = engine.BridgeMethodCall(this.Generics, invocation, new IEEngine.Value(null), arguments);
+                    result = engine.BridgeMethodCall(this.Generics, invocation, new Value(null), arguments);
                     return true;
                 }
 
@@ -110,7 +113,7 @@ namespace InterEx
                 return false;
             }
 
-            public bool Set(IEEngine engine, string name, IEEngine.Value value)
+            public bool Set(IEEngine engine, string name, Value value)
             {
                 return false;
             }
@@ -205,7 +208,7 @@ namespace InterEx
             return provider;
         }
 
-        protected void Using(IEEngine engine, Statement target, IEEngine.Scope scope)
+        protected void Using(IEEngine engine, Statement target, Scope scope)
         {
             var targetValue = engine.Evaluate(target, scope);
             var entity = engine.ExportValue<EntityInfo>(targetValue);
@@ -213,12 +216,12 @@ namespace InterEx
             this._usings.Add(entity);
         }
 
-        bool IEEngine.IValueProvider.Find(IEEngine engine, string name, out IEEngine.Value value)
+        bool IValueProvider.Find(IEEngine engine, string name, out Value value)
         {
             if (name == "k_Using")
             {
                 var action = this.Using;
-                value = new IEEngine.Value(action);
+                value = new Value(action);
                 return true;
             }
 
@@ -226,16 +229,16 @@ namespace InterEx
 
             foreach (var usingNamespace in this._usings)
             {
-                if (usingNamespace.Members.TryGetValue(name, out entity)) { value = new IEEngine.Value(entity); return true; }
+                if (usingNamespace.Members.TryGetValue(name, out entity)) { value = new Value(entity); return true; }
             }
 
-            if (this._global.Members.TryGetValue(name, out entity)) { value = new IEEngine.Value(entity); return true; }
+            if (this._global.Members.TryGetValue(name, out entity)) { value = new Value(entity); return true; }
 
             value = default;
             return false;
         }
 
-        bool IEEngine.IValueExporter.Export(IEEngine _, IEEngine.Value value, Type type, out object data)
+        bool IValueExporter.Export(IEEngine _, Value value, Type type, out object data)
         {
             if (type == typeof(Type) && value.Content is EntityInfo entityInfo && entityInfo.Class != null)
             {

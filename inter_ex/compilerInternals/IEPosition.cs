@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace InterEx
+namespace InterEx.CompilerInternals
 {
     public record struct IEPosition(string Path, string Content, int Index)
     {

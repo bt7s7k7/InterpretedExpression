@@ -6,8 +6,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using InterEx.CompilerInternals;
+using InterEx.InterfaceTypes;
 
-namespace InterEx
+namespace InterEx.Integration
 {
     public sealed partial class IEOperators
     {
@@ -44,10 +46,10 @@ namespace InterEx
         public static double number(bool a) => a ? 1 : 0;
         public static double number(object _) => Double.NaN;
 
-        public static IEEngine.Value k_Then(Statement predicateStmt, IEEngine engine, Statement exprStmt, IEEngine.Scope scope)
+        public static Value k_Then(Statement predicateStmt, IEEngine engine, Statement exprStmt, Scope scope)
         {
             var predicate = engine.Evaluate(predicateStmt, scope);
-            var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<IEEngine.Value>());
+            var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<Value>());
             var predicateValue = engine.ExportValue<bool>(predicateBool);
 
             if (predicateValue)
@@ -61,10 +63,10 @@ namespace InterEx
             }
         }
 
-        public static IEEngine.Value k_Else(Statement predicateStmt, IEEngine engine, Statement exprStmt, IEEngine.Scope scope)
+        public static Value k_Else(Statement predicateStmt, IEEngine engine, Statement exprStmt, Scope scope)
         {
             var predicate = engine.Evaluate(predicateStmt, scope);
-            var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<IEEngine.Value>());
+            var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<Value>());
             var predicateValue = engine.ExportValue<bool>(predicateBool);
 
             if (!predicateValue)
@@ -78,14 +80,14 @@ namespace InterEx
             }
         }
 
-        public static void k_While(Statement predicateStmt, IEEngine engine, Statement exprStmt, IEEngine.Scope scope)
+        public static void k_While(Statement predicateStmt, IEEngine engine, Statement exprStmt, Scope scope)
         {
             var innerScope = scope.MakeChild();
 
             while (true)
             {
                 var predicate = engine.Evaluate(predicateStmt, scope);
-                var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<IEEngine.Value>());
+                var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<Value>());
                 var predicateValue = engine.ExportValue<bool>(predicateBool);
                 if (!predicateValue) break;
 
@@ -93,13 +95,13 @@ namespace InterEx
             }
         }
 
-        public static void k_Out(Statement sourceStmt, IEEngine engine, Statement nameStmt, IEEngine.Scope scope)
+        public static void k_Out(Statement sourceStmt, IEEngine engine, Statement nameStmt, Scope scope)
         {
             var sourceValue = engine.Evaluate(sourceStmt, scope);
             if (nameStmt is not Statement.Group namesGroup) throw new IERuntimeException("Expected list of properties to destructure");
             var names = namesGroup.Statements.Cast<Statement.VariableAccess>().Select(v => v.Name);
 
-            if (sourceValue.Content is Dictionary<string, IEEngine.Value> dict)
+            if (sourceValue.Content is Dictionary<string, Value> dict)
             {
                 foreach (var name in names)
                 {

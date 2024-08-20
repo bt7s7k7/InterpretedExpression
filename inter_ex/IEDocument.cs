@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
+using InterEx.CompilerInternals;
 
 namespace InterEx
 {

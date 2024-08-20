@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using InterEx.Integration;
 
-namespace InterEx
+namespace InterEx.CompilerInternals
 {
     public abstract record class Statement(IEPosition Position)
     {

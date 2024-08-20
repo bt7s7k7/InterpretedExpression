@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using InterEx.InterfaceTypes;
 
-namespace InterEx
+namespace InterEx.Integration
 {
     public class DelegateAdapterProvider
     {

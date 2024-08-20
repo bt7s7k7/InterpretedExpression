@@ -1,20 +1,22 @@
-namespace InterEx
+using InterEx.CompilerInternals;
+
+namespace InterEx.InterfaceTypes
 {
     public abstract class IEReference
     {
         public abstract T Get<T>();
-        public abstract IEEngine.Value Get();
+        public abstract Value Get();
 
-        public abstract void Set(IEEngine.Value value);
+        public abstract void Set(Value value);
         public abstract void Set(object value);
 
         public class ObjectProperty : IEReference
         {
             protected readonly IEEngine _engine;
-            protected readonly IEEngine.Value _receiver;
+            protected readonly Value _receiver;
             protected readonly string _property;
 
-            public ObjectProperty(IEEngine engine, IEEngine.Value receiver, string property)
+            public ObjectProperty(IEEngine engine, Value receiver, string property)
             {
                 this._engine = engine;
                 this._receiver = receiver;
@@ -26,7 +28,7 @@ namespace InterEx
                 return this._engine.ExportValue<T>(this.Get());
             }
 
-            public override IEEngine.Value Get()
+            public override Value Get()
             {
                 return this._engine.GetProperty(this._receiver, this._property);
             }
@@ -36,7 +38,7 @@ namespace InterEx
                 this.Set(this._engine.ImportValue(value));
             }
 
-            public override void Set(IEEngine.Value value)
+            public override void Set(Value value)
             {
                 this._engine.SetProperty(this._receiver, this._property, value);
             }
@@ -45,9 +47,9 @@ namespace InterEx
         public class VariableReference : IEReference
         {
             protected readonly IEEngine _engine;
-            protected readonly IEEngine.Variable _variable;
+            protected readonly Variable _variable;
 
-            public VariableReference(IEEngine engine, IEEngine.Variable variable)
+            public VariableReference(IEEngine engine, Variable variable)
             {
                 this._engine = engine;
                 this._variable = variable;
@@ -58,12 +60,12 @@ namespace InterEx
                 return this._engine.ExportValue<T>(this.Get());
             }
 
-            public override IEEngine.Value Get()
+            public override Value Get()
             {
                 return this._variable.Content;
             }
 
-            public override void Set(IEEngine.Value value)
+            public override void Set(Value value)
             {
                 this._variable.Content = value;
             }
