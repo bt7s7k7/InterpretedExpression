@@ -116,6 +116,22 @@ namespace InterEx
             this.AddGlobal("GLOBAL", this.GlobalScope);
             this.AddGlobal("ENGINE", this);
 
+            this.AddGlobal("k_Ref", (IEEngine engine, Statement value, Scope scope) =>
+            {
+                if (value is Statement.MemberAccess memberAccess)
+                {
+                    var receiver = engine.Evaluate(memberAccess.Receiver, scope);
+                    engine.GetProperty(receiver, memberAccess.Member);
+                    return (IEReference)new IEReference.ObjectProperty(engine, receiver, memberAccess.Member);
+                }
+                else if (value is Statement.VariableAccess variableAccess)
+                {
+                    var variable = engine.GetVariable(variableAccess.Name, variableAccess.Position, scope);
+                    return (IEReference)new IEReference.VariableReference(engine, variable);
+                }
+                else throw new IERuntimeException("Can only get reference to a variable or object property");
+            });
+
             this.InstanceCache.AddPatcher((_, type, info) =>
             {
                 if (type.IsAssignableTo(typeof(IDictionary)))
