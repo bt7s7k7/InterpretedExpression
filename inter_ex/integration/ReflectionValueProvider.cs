@@ -54,7 +54,7 @@ namespace InterEx
             {
                 if (name == "o_Members")
                 {
-                    value = engine.ImportValue(this.Members);
+                    value = engine.Integration.ImportValue(this.Members);
                     return true;
                 }
 
@@ -66,17 +66,17 @@ namespace InterEx
 
                 if (this.Class != null)
                 {
-                    var info = this.Owner.Engine.StaticCache.GetClassInfo(this.Class);
+                    var info = this.Owner.Integration.StaticCache.GetClassInfo(this.Class);
                     if (info.Properties.TryGetValue(name, out var member))
                     {
                         if (member is PropertyInfo property)
                         {
-                            value = engine.ImportValue(property.GetValue(null));
+                            value = engine.Integration.ImportValue(property.GetValue(null));
                             return true;
                         }
                         else if (member is FieldInfo field)
                         {
-                            value = engine.ImportValue(field.GetValue(null));
+                            value = engine.Integration.ImportValue(field.GetValue(null));
                             return true;
                         }
                         else throw new();
@@ -96,7 +96,7 @@ namespace InterEx
 
                 if (this.Class != null)
                 {
-                    var info = this.Owner.Engine.StaticCache.GetClassInfo(this.Class);
+                    var info = this.Owner.Integration.StaticCache.GetClassInfo(this.Class);
                     if (!info.Functions.TryGetValue(name, out var overloads)) { result = default; return false; };
 
                     result = engine.BridgeMethodCall(overloads, invocation, new Value(null), arguments);
@@ -190,20 +190,20 @@ namespace InterEx
 
         protected readonly EntityInfo _global;
         protected readonly List<EntityInfo> _usings = new();
-        public readonly IEEngine Engine;
+        public readonly IEIntegrationManager Integration;
 
-        protected ReflectionValueProvider(IEEngine engine)
+        protected ReflectionValueProvider(IEIntegrationManager integration)
         {
             this._global = new EntityInfo(this, "");
-            this.Engine = engine;
+            this.Integration = integration;
         }
 
-        public static ReflectionValueProvider CreateAndRegister(IEEngine engine)
+        public static ReflectionValueProvider CreateAndRegister(IEIntegrationManager integration)
         {
-            var provider = new ReflectionValueProvider(engine);
+            var provider = new ReflectionValueProvider(integration);
 
-            engine.AddExporter(provider);
-            engine.AddProvider(provider);
+            integration.AddExporter(provider);
+            integration.AddProvider(provider);
 
             return provider;
         }
@@ -211,12 +211,12 @@ namespace InterEx
         protected void Using(IEEngine engine, Statement target, Scope scope)
         {
             var targetValue = engine.Evaluate(target, scope);
-            var entity = engine.ExportValue<EntityInfo>(targetValue);
+            var entity = engine.Integration.ExportValue<EntityInfo>(targetValue);
             if (this._usings.Contains(entity)) return;
             this._usings.Add(entity);
         }
 
-        bool IValueProvider.Find(IEEngine engine, string name, out Value value)
+        bool IValueProvider.Find(IEIntegrationManager _, string name, out Value value)
         {
             if (name == "k_Using")
             {
@@ -238,7 +238,7 @@ namespace InterEx
             return false;
         }
 
-        bool IValueExporter.Export(IEEngine _, Value value, Type type, out object data)
+        bool IValueExporter.Export(IEIntegrationManager _, Value value, Type type, out object data)
         {
             if (type == typeof(Type) && value.Content is EntityInfo entityInfo && entityInfo.Class != null)
             {

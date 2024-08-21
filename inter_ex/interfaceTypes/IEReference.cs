@@ -25,7 +25,7 @@ namespace InterEx.InterfaceTypes
 
             public override T Get<T>()
             {
-                return this._engine.ExportValue<T>(this.Get());
+                return this._engine.Integration.ExportValue<T>(this.Get());
             }
 
             public override Value Get()
@@ -35,7 +35,7 @@ namespace InterEx.InterfaceTypes
 
             public override void Set(object value)
             {
-                this.Set(this._engine.ImportValue(value));
+                this.Set(this._engine.Integration.ImportValue(value));
             }
 
             public override void Set(Value value)
@@ -57,7 +57,7 @@ namespace InterEx.InterfaceTypes
 
             public override T Get<T>()
             {
-                return this._engine.ExportValue<T>(this.Get());
+                return this._engine.Integration.ExportValue<T>(this.Get());
             }
 
             public override Value Get()
@@ -72,7 +72,7 @@ namespace InterEx.InterfaceTypes
 
             public override void Set(object value)
             {
-                this.Set(this._engine.ImportValue(value));
+                this.Set(this._engine.Integration.ImportValue(value));
             }
         }
     }

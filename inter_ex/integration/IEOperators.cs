@@ -50,7 +50,7 @@ namespace InterEx.Integration
         {
             var predicate = engine.Evaluate(predicateStmt, scope);
             var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<Value>());
-            var predicateValue = engine.ExportValue<bool>(predicateBool);
+            var predicateValue = engine.Integration.ExportValue<bool>(predicateBool);
 
             if (predicateValue)
             {
@@ -67,7 +67,7 @@ namespace InterEx.Integration
         {
             var predicate = engine.Evaluate(predicateStmt, scope);
             var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<Value>());
-            var predicateValue = engine.ExportValue<bool>(predicateBool);
+            var predicateValue = engine.Integration.ExportValue<bool>(predicateBool);
 
             if (!predicateValue)
             {
@@ -88,7 +88,7 @@ namespace InterEx.Integration
             {
                 var predicate = engine.Evaluate(predicateStmt, scope);
                 var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<Value>());
-                var predicateValue = engine.ExportValue<bool>(predicateBool);
+                var predicateValue = engine.Integration.ExportValue<bool>(predicateBool);
                 if (!predicateValue) break;
 
                 engine.Evaluate(exprStmt, innerScope);
@@ -106,7 +106,7 @@ namespace InterEx.Integration
                 foreach (var name in names)
                 {
                     if (!dict.TryGetValue(name, out var value)) throw new IERuntimeException($"Dictionary does not contain key '{name}'");
-                    scope.Declare(name).Content = engine.ImportValue(value);
+                    scope.Declare(name).Content = engine.Integration.ImportValue(value);
                 }
             }
             else

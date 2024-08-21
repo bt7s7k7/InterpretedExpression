@@ -15,15 +15,12 @@ namespace InterEx
 
         public void AddGlobal(string name, object value)
         {
-            var content = this.ImportValue(value);
+            var content = this.Integration.ImportValue(value);
             var variable = this.GlobalScope.Declare(name);
             variable.Content = content;
         }
 
         public readonly IEIntegrationManager Integration;
-        public readonly ReflectionCache InstanceCache;
-        public readonly ReflectionCache StaticCache;
-        public readonly DelegateAdapterProvider Delegates;
 
         public FunctionScope PrepareCall()
         {
@@ -40,17 +37,17 @@ namespace InterEx
             }
 
             var type = receiver.Content.GetType();
-            var info = this.InstanceCache.GetClassInfo(type);
+            var info = this.Integration.InstanceCache.GetClassInfo(type);
 
             if (!info.Properties.TryGetValue(name, out var member)) throw new IERuntimeException($"Object '{type}' does not contain property '{name}'");
 
             if (member is PropertyInfo property)
             {
-                return this.ImportValue(property.GetValue(receiver.Content));
+                return this.Integration.ImportValue(property.GetValue(receiver.Content));
             }
             else if (member is FieldInfo field)
             {
-                return this.ImportValue(field.GetValue(receiver.Content));
+                return this.Integration.ImportValue(field.GetValue(receiver.Content));
             }
             else throw new();
         }
@@ -64,17 +61,17 @@ namespace InterEx
             }
 
             var type = receiver.Content.GetType();
-            var info = this.InstanceCache.GetClassInfo(type);
+            var info = this.Integration.InstanceCache.GetClassInfo(type);
 
             if (!info.Properties.TryGetValue(name, out var member)) throw new IERuntimeException($"Object '{type}' does not contain property '{name}'");
 
             if (member is PropertyInfo property)
             {
-                property.SetValue(receiver.Content, this.ExportValue(value, property.PropertyType));
+                property.SetValue(receiver.Content, this.Integration.ExportValue(value, property.PropertyType));
             }
             else if (member is FieldInfo field)
             {
-                field.SetValue(receiver.Content, this.ExportValue(value, field.FieldType));
+                field.SetValue(receiver.Content, this.Integration.ExportValue(value, field.FieldType));
             }
             else throw new();
         }
@@ -92,7 +89,7 @@ namespace InterEx
             }
 
             var type = receiver.Content?.GetType();
-            var info = type == null ? null : this.InstanceCache.GetClassInfo(type);
+            var info = type == null ? null : this.Integration.InstanceCache.GetClassInfo(type);
 
             if (method == "") method = "Invoke";
 
@@ -101,7 +98,7 @@ namespace InterEx
                 return this.BridgeMethodCall(overloads, invocation, receiver, arguments);
             }
 
-            var operators = this.StaticCache.GetClassInfo(typeof(IEOperators));
+            var operators = this.Integration.StaticCache.GetClassInfo(typeof(IEOperators));
             if (operators.Functions.TryGetValue(method, out var operatorMethod))
             {
                 var operatorArguments = new[] { receiver }.Concat(arguments).ToArray();
@@ -115,24 +112,11 @@ namespace InterEx
         {
             if (scope.Get(name, out var variable)) return variable;
 
-            foreach (var provider in this._providers)
+            if (this.Integration.FindValue(name, out var value))
             {
-                if (provider.Find(this, name, out var value))
-                {
-                    var newVariable = this.GlobalScope.Declare(name);
-                    newVariable.Content = value;
-                    return newVariable;
-                }
-            }
-
-            foreach (var provider in this._providersFallback)
-            {
-                if (provider.Find(this, name, out var value))
-                {
-                    var newVariable = this.GlobalScope.Declare(name);
-                    newVariable.Content = value;
-                    return newVariable;
-                }
+                var newVariable = this.GlobalScope.Declare(name);
+                newVariable.Content = value;
+                return newVariable;
             }
 
             throw new IERuntimeException(position.Format("Cannot find variable " + name));
@@ -291,120 +275,32 @@ namespace InterEx
             }
         }
 
-        protected readonly List<IValueImporter> _importers = new();
-        public void AddImporter(IValueImporter importer) => this._importers.Add(importer);
-        protected readonly List<IValueExporter> _exporters = new();
-        public void AddExporter(IValueExporter exporter) => this._exporters.Add(exporter);
-        protected readonly List<IValueExporter> _exportersFallback = new();
-        public void AddExporterFallback(IValueExporter exporter) => this._exportersFallback.Add(exporter);
-        protected readonly List<IValueProvider> _providers = new();
-        public void AddProvider(IValueProvider provider) => this._providers.Add(provider);
-        protected readonly List<IValueProvider> _providersFallback = new();
-        public void AddProviderFallback(IValueProvider provider) => this._providersFallback.Add(provider);
-
-        public Value ImportValue(object data)
-        {
-            if (data is Value existing) return existing;
-
-            foreach (var importer in this._importers)
-            {
-                if (importer.Import(this, data, out var value)) return value;
-            }
-
-            return new Value(data);
-        }
-
-        public object ExportValue(Value value, Type type)
-        {
-            if (type == typeof(Value)) return value;
-
-            if (value.Content != null && value.Content.GetType().IsAssignableTo(type))
-            {
-                return value.Content;
-            }
-
-            if (value.Content == null && type.IsClass)
-            {
-                return null;
-            }
-
-            foreach (var exporter in this._exporters)
-            {
-                if (exporter.Export(this, value, type, out var data)) return data;
-            }
-
-            if (type == typeof(object))
-            {
-                return value.Content;
-            }
-
-            foreach (var exporter in this._exportersFallback)
-            {
-                if (exporter.Export(this, value, type, out var data)) return data;
-            }
-
-            throw new IERuntimeException("Cannot convert value " + value.Content?.GetType().FullName + " into " + type.FullName);
-        }
-
-        public T ExportValue<T>(Value value)
-        {
-            return (T)this.ExportValue(value, typeof(T));
-        }
-
-        public object[] ExportArguments(Value[] arguments, Type[] parameters)
-        {
-            if (parameters == null) return arguments.Cast<object>().ToArray();
-
-            if (arguments.Length != parameters.Length)
-            {
-                throw new IERuntimeException($"Argument count mismatch, got {arguments.Length}, but expected {parameters.Length} ({String.Join(", ", parameters.Select(v => v.FullName))})");
-            }
-
-            var result = new object[arguments.Length];
-
-            for (var i = 0; i < arguments.Length; i++)
-            {
-                var argument = arguments[i];
-                var parameter = parameters[i];
-
-                try
-                {
-                    result[i] = this.ExportValue(argument, parameter);
-                }
-                catch (IERuntimeException error)
-                {
-                    throw new IERuntimeException($"Argument type mismatch in ({String.Join(", ", parameters.Select(v => v.FullName))})[{i}]", error);
-                }
-            }
-
-            return result;
-        }
-
         public object ExecuteMethodCall(ReflectionCache.FunctionInfo function, Value receiver, Value[] arguments)
         {
             var result = (object)null;
 
             var target = function.Target;
+            var context = new CallContext(this, function);
 
             if (target is MethodInfo method)
             {
-                var exportedArguments = this.ExportArguments(arguments, function.Parameters);
+                var exportedArguments = this.Integration.ExportArguments(arguments, function.Parameters, context);
                 result = method.Invoke(receiver.Content, exportedArguments);
             }
             else if (target is ConstructorInfo constructor)
             {
-                var exportedArguments = this.ExportArguments(arguments, function.Parameters);
+                var exportedArguments = this.Integration.ExportArguments(arguments, function.Parameters, context);
                 result = constructor.Invoke(exportedArguments);
             }
             else if (target is ReflectionCache.VariadicFunction variadic)
             {
-                var exportedArguments = this.ExportArguments(arguments, function.Parameters);
+                var exportedArguments = this.Integration.ExportArguments(arguments, function.Parameters, context);
                 if (receiver.Content != null) exportedArguments = new[] { receiver.Content }.Concat(exportedArguments).ToArray();
                 result = variadic(exportedArguments);
             }
             else if (target is Delegate @delegate)
             {
-                var exportedArguments = this.ExportArguments(arguments, function.Parameters);
+                var exportedArguments = this.Integration.ExportArguments(arguments, function.Parameters, context);
                 if (receiver.Content != null) exportedArguments = new[] { receiver.Content }.Concat(exportedArguments).ToArray();
                 result = @delegate.DynamicInvoke(exportedArguments);
             }
@@ -433,7 +329,7 @@ namespace InterEx
                     goto deoptimize;
                 }
 
-                return this.ImportValue(result);
+                return this.Integration.ImportValue(result);
             }
 
             goto next;
@@ -463,7 +359,7 @@ namespace InterEx
                     Target: overload
                 );
 
-                return this.ImportValue(resultObject);
+                return this.Integration.ImportValue(resultObject);
             }
 
             throw new IERuntimeException(String.Join('\n', messages));
@@ -474,9 +370,6 @@ namespace InterEx
             integration ??= new();
 
             this.Integration = integration;
-            this.StaticCache = integration.StaticCache;
-            this.InstanceCache = integration.InstanceCache;
-            this.Delegates = integration.Delegates;
 
             IntrinsicSource.InitializeIntrinsics(this);
         }

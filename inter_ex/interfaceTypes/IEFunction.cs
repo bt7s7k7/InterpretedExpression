@@ -25,17 +25,17 @@ namespace InterEx.InterfaceTypes
 
         public T Invoke<T>(params object[] arguments)
         {
-            return this.Engine.ExportValue<T>(this.InvokeRaw(arguments.Select(this.Engine.ImportValue).ToArray()));
+            return this.Engine.Integration.ExportValue<T>(this.InvokeRaw(arguments.Select(this.Engine.Integration.ImportValue).ToArray()));
         }
 
         public void Invoke(params object[] arguments)
         {
-            this.InvokeRaw(arguments.Select(this.Engine.ImportValue).ToArray());
+            this.InvokeRaw(arguments.Select(this.Engine.Integration.ImportValue).ToArray());
         }
 
         public object InvokeAndExport(Type resultType, object[] arguments)
         {
-            return this.Engine.ExportValue(this.InvokeRaw(arguments.Select(this.Engine.ImportValue).ToArray()), resultType);
+            return this.Engine.Integration.ExportValue(this.InvokeRaw(arguments.Select(this.Engine.Integration.ImportValue).ToArray()), resultType);
         }
     }
 }

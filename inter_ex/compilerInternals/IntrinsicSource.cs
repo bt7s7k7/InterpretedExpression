@@ -9,7 +9,7 @@ namespace InterEx.CompilerInternals
 {
     public class IntrinsicSource : IValueImporter, IValueExporter
     {
-        public bool Export(IEEngine engine, Value value, Type type, out object data)
+        public bool Export(IEIntegrationManager integration, Value value, Type type, out object data)
         {
             if (value.Content is double number)
             {
@@ -44,9 +44,9 @@ namespace InterEx.CompilerInternals
                 return true;
             }
 
-            if (value.Content is IEFunction function && engine.Delegates.IsDelegate(type))
+            if (value.Content is IEFunction function && integration.Delegates.IsDelegate(type))
             {
-                var adapter = engine.Delegates.GetAdapter(type);
+                var adapter = integration.Delegates.GetAdapter(type);
                 data = adapter.Adapt(function);
                 return true;
             }
@@ -64,7 +64,7 @@ namespace InterEx.CompilerInternals
             return false;
         }
 
-        public bool Import(IEEngine _, object data, out Value value)
+        public bool Import(IEIntegrationManager _, object data, out Value value)
         {
             if (data is int @int) { value = new Value((double)@int); return true; }
             if (data is short @short) { value = new Value((double)@short); return true; }
@@ -82,34 +82,12 @@ namespace InterEx.CompilerInternals
         public static readonly Type ListType = typeof(IList<string>).GetGenericTypeDefinition();
         public static readonly Type ListResultType = typeof(List<string>).GetGenericTypeDefinition();
 
-        public static void InitializeIntrinsics(IEEngine engine)
+        public static void InitializeIntegration(IEIntegrationManager integration)
         {
-            engine.AddExporter(Instance);
-            engine.AddImporter(Instance);
+            integration.AddExporter(Instance);
+            integration.AddImporter(Instance);
 
-            engine.AddGlobal("true", true);
-            engine.AddGlobal("false", false);
-            engine.AddGlobal("null", null);
-            engine.AddGlobal("GLOBAL", engine.GlobalScope);
-            engine.AddGlobal("ENGINE", engine);
-
-            engine.AddGlobal("k_Ref", (IEEngine engine, Statement value, Scope scope) =>
-            {
-                if (value is Statement.MemberAccess memberAccess)
-                {
-                    var receiver = engine.Evaluate(memberAccess.Receiver, scope);
-                    engine.GetProperty(receiver, memberAccess.Member);
-                    return (IEReference)new IEReference.ObjectProperty(engine, receiver, memberAccess.Member);
-                }
-                else if (value is Statement.VariableAccess variableAccess)
-                {
-                    var variable = engine.GetVariable(variableAccess.Name, variableAccess.Position, scope);
-                    return (IEReference)new IEReference.VariableReference(engine, variable);
-                }
-                else throw new IERuntimeException("Can only get reference to a variable or object property");
-            });
-
-            engine.InstanceCache.AddPatcher((_, type, info) =>
+            integration.InstanceCache.AddPatcher((_, type, info) =>
             {
                 if (type.IsAssignableTo(typeof(IDictionary)))
                 {
@@ -144,7 +122,7 @@ namespace InterEx.CompilerInternals
                         {
                             foreach (var (key, value) in literal)
                             {
-                                receiver.Add(key, engine.ExportValue(value, valueType));
+                                receiver.Add(key, integration.ExportValue(value, valueType));
                             }
 
                             return receiver;
@@ -168,7 +146,7 @@ namespace InterEx.CompilerInternals
 
                             foreach (var element in arguments.Skip(1).Cast<Value>())
                             {
-                                receiver.Add(engine.ExportValue(element, valueType));
+                                receiver.Add(integration.ExportValue(element, valueType));
                             }
 
                             return receiver;
@@ -178,16 +156,45 @@ namespace InterEx.CompilerInternals
                     }
                 }
 
-                info.AddFunction("init", new((object receiver, Dictionary<string, Value> literal) =>
+                info.AddFunction("init", new((object receiver, Dictionary<string, Value> literal, CallContext ctx) =>
                 {
+                    var engine = ctx.Engine;
+
                     foreach (var (key, value) in literal)
                     {
                         engine.SetProperty(new Value(receiver), key, value);
                     }
 
                     return receiver;
-                }, new[] { typeof(Dictionary<string, Value>) }));
+                }, new[] { typeof(Dictionary<string, Value>), typeof(CallContext) }));
             });
+        }
+
+        public static void InitializeIntrinsics(IEEngine engine)
+        {
+            engine.AddGlobal("true", true);
+            engine.AddGlobal("false", false);
+            engine.AddGlobal("null", null);
+            engine.AddGlobal("GLOBAL", engine.GlobalScope);
+            engine.AddGlobal("ENGINE", engine);
+
+            engine.AddGlobal("k_Ref", (IEEngine engine, Statement value, Scope scope) =>
+            {
+                if (value is Statement.MemberAccess memberAccess)
+                {
+                    var receiver = engine.Evaluate(memberAccess.Receiver, scope);
+                    engine.GetProperty(receiver, memberAccess.Member);
+                    return (IEReference)new IEReference.ObjectProperty(engine, receiver, memberAccess.Member);
+                }
+                else if (value is Statement.VariableAccess variableAccess)
+                {
+                    var variable = engine.GetVariable(variableAccess.Name, variableAccess.Position, scope);
+                    return (IEReference)new IEReference.VariableReference(engine, variable);
+                }
+                else throw new IERuntimeException("Can only get reference to a variable or object property");
+            });
+
+
         }
     }
 }
