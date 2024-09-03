@@ -1,0 +1,123 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "InterEx",
+    "scopeName": "source.inter-ex",
+    "patterns": [
+        {
+            "include": "#keywords"
+        },
+        {
+            "include": "#strings"
+        },
+        {
+            "include": "#numbers"
+        },
+        {
+            "include": "#variables"
+        },
+        {
+            "include": "#comments"
+        }
+    ],
+    "repository": {
+        "keywords": {
+            "patterns": [
+                {
+                    "name": "keyword.control.inter-ex",
+                    "match": "\\bk_[\\w]*\\b()(?=\\()"
+                },
+                {
+                    "name": "keyword.control.inter-ex",
+                    "match": "\\$"
+                },
+                {
+                    "name": "constant.language.inter-ex",
+                    "match": "\\b(null|true|false|init)\\b"
+                }
+            ]
+        },
+        "string-escape": {
+            "patterns": [
+                {
+                    "name": "constant.character.escape.inter-ex",
+                    "match": "\\\\."
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.inter-ex",
+                    "begin": "\"",
+                    "end": "\"",
+                    "patterns": [
+                        {
+                            "include": "#string-escape"
+                        }
+                    ]
+                },
+                {
+                    "name": "string.quoted.single.inter-ex",
+                    "begin": "'",
+                    "end": "'",
+                    "patterns": [
+                        {
+                            "include": "#string-escape"
+                        }
+                    ]
+                },
+                {
+                    "name": "string.quoted.other.inter-ex",
+                    "begin": "`",
+                    "end": "`",
+                    "patterns": [
+                        {
+                            "include": "#string-escape"
+                        }
+                    ]
+                }
+            ]
+        },
+        "variables": {
+            "patterns": [
+                {
+                    "name": "support.type.property-name",
+                    "match": "\\b[\\w]+(?=:)"
+                },
+                {
+                    "name": "support.class.inter-ex",
+                    "match": "(?<!\\.)[A-Z][\\w]+"
+                },
+                {
+                    "name": "entity.name.function.inter-ex",
+                    "match": "\\b[\\w]+\\b()(?=\\()"
+                },
+                {
+                    "name": "variable.other.inter-ex",
+                    "match": "\\b[\\w]+\\b"
+                }
+            ]
+        },
+        "numbers": {
+            "patterns": [
+                {
+                    "name": "constant.numeric.decimal.inter-ex",
+                    "match": "\\b\\d+(\\.\\d+)?\\b"
+                }
+            ]
+        },
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.line.double-slash.inter-ex",
+                    "match": "\\/\\/.*"
+                },
+                {
+                    "name": "comment.block",
+                    "begin": "\\/\\*",
+                    "end": "\\*\\/"
+                }
+            ]
+        }
+    }
+}
