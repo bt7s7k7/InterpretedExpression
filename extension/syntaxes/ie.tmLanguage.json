@@ -4,22 +4,32 @@
     "scopeName": "source.inter-ex",
     "patterns": [
         {
-            "include": "#keywords"
-        },
-        {
-            "include": "#strings"
-        },
-        {
-            "include": "#numbers"
-        },
-        {
-            "include": "#variables"
-        },
-        {
-            "include": "#comments"
+            "include": "#global"
         }
     ],
     "repository": {
+        "global": {
+            "patterns": [
+                {
+                    "include": "#keywords"
+                },
+                {
+                    "include": "#strings"
+                },
+                {
+                    "include": "#numbers"
+                },
+                {
+                    "include": "#variables"
+                },
+                {
+                    "include": "#constructs"
+                },
+                {
+                    "include": "#comments"
+                }
+            ]
+        },
         "keywords": {
             "patterns": [
                 {
@@ -78,12 +88,68 @@
                 }
             ]
         },
-        "variables": {
+        "constructs": {
             "patterns": [
                 {
-                    "name": "support.type.property-name",
-                    "match": "\\b[\\w]+(?=:)"
+                    "name": "meta.function.inter-ex",
+                    "begin": "(\\^)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "storage.type.function.inter-ex"
+                        }
+                    },
+                    "end": "}",
+                    "patterns": [
+                        {
+                            "begin": "\\(",
+                            "end": "\\)",
+                            "patterns": [
+                                {
+                                    "name": "variable.parameter",
+                                    "match": "[a-zA-Z_]\\w*"
+                                }
+                            ]
+                        },
+                        {
+                            "begin": "{",
+                            "end": "(?=})",
+                            "patterns": [
+                                {
+                                    "include": "#global"
+                                }
+                            ]
+                        }
+                    ]
                 },
+                {
+                    "name": "meta.objectliteral.inter-ex",
+                    "begin": "{",
+                    "patterns": [
+                        {
+                            "begin": "([a-zA-Z_]\\w*):",
+                            "end": "(?=([,}]|[a-zA-Z_]\\w*:))",
+                            "beginCaptures": {
+                                "1": {
+                                    "name": "support.type.property-name.inter-ex"
+                                }
+                            },
+                            "patterns": [
+                                {
+                                    "include": "#global"
+                                }
+                            ]
+                        },
+                        {
+                            "name": "support.type.property-name.implicit.inter-ex",
+                            "match": "[a-zA-Z_]\\w*"
+                        }
+                    ],
+                    "end": "}"
+                }
+            ]
+        },
+        "variables": {
+            "patterns": [
                 {
                     "name": "support.class.inter-ex",
                     "match": "(?<!\\.)[A-Z][\\w]+"
