@@ -26,3 +26,17 @@ dotnet_diagnostic.IDE0090.severity = none
 dotnet_diagnostic.IDE0047.severity = none
 # Do not use type keywords for member access or ctors i.e. allow `new String` or `Int32.MaxValue`
 dotnet_diagnostic.IDE0049.severity = none
+# Warning on unused import
+dotnet_diagnostic.IDE0005.severity = warning
+
+
+# Force protected/private members to be prefixed with `_`
+dotnet_naming_symbols.method_underscore.applicable_kinds = method, field, property
+dotnet_naming_symbols.method_underscore.applicable_accessibilities = private_protected
+
+dotnet_naming_style.underscored.capitalization = pascal_case
+dotnet_naming_style.underscored.required_prefix = _
+
+dotnet_naming_rule.method_underscore_underscored.symbols = method_underscore
+dotnet_naming_rule.method_underscore_underscored.style = underscored
+dotnet_naming_rule.method_underscore_underscored.severity = error

@@ -105,7 +105,8 @@ namespace InterEx
                 return this.BridgeMethodCall(operatorMethod, invocation, new(null), operatorArguments);
             }
 
-            throw new IERuntimeException($"Object '{type?.ToString() ?? "null"}' does not contain method '{method}'");
+            var memberValue = this.GetProperty(receiver, method);
+            return this.Invoke(memberValue, invocation, "Invoke", arguments);
         }
 
         public Variable GetVariable(string name, IEPosition position, Scope scope)

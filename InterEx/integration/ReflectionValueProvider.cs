@@ -97,7 +97,8 @@ namespace InterEx
                 if (this.Class != null)
                 {
                     var info = this.Owner.Integration.StaticCache.GetClassInfo(this.Class);
-                    if (!info.Functions.TryGetValue(name, out var overloads)) { result = default; return false; };
+                    if (!info.Functions.TryGetValue(name, out var overloads)) { result = default; return false; }
+                    ;
 
                     result = engine.BridgeMethodCall(overloads, invocation, new Value(null), arguments);
                     return true;
@@ -139,7 +140,7 @@ namespace InterEx
 
         protected EntityInfo GetEntity(string path)
         {
-            var result = this._global;
+            var result = this.Global;
             var segments = path
                 .Split(new[] { '.', '+' })
                 .Select(v => v.Split('`')[0]);
@@ -188,13 +189,13 @@ namespace InterEx
             return this;
         }
 
-        protected readonly EntityInfo _global;
+        public readonly EntityInfo Global;
         protected readonly List<EntityInfo> _usings = new();
         public readonly IEIntegrationManager Integration;
 
         protected ReflectionValueProvider(IEIntegrationManager integration)
         {
-            this._global = new EntityInfo(this, "");
+            this.Global = new EntityInfo(this, "");
             this.Integration = integration;
         }
 
@@ -208,19 +209,24 @@ namespace InterEx
             return provider;
         }
 
-        protected void Using(IEEngine engine, Statement target, Scope scope)
+        public void Using(EntityInfo entity)
+        {
+            if (this._usings.Contains(entity)) return;
+            this._usings.Add(entity);
+        }
+
+        protected void UsingStatement(IEEngine engine, Statement target, Scope scope)
         {
             var targetValue = engine.Evaluate(target, scope);
             var entity = engine.Integration.ExportValue<EntityInfo>(targetValue);
-            if (this._usings.Contains(entity)) return;
-            this._usings.Add(entity);
+            this.Using(entity);
         }
 
         bool IValueProvider.Find(IEIntegrationManager _, string name, out Value value)
         {
             if (name == "k_Using")
             {
-                var action = this.Using;
+                var action = this.UsingStatement;
                 value = new Value(action);
                 return true;
             }
@@ -232,7 +238,7 @@ namespace InterEx
                 if (usingNamespace.Members.TryGetValue(name, out entity)) { value = new Value(entity); return true; }
             }
 
-            if (this._global.Members.TryGetValue(name, out entity)) { value = new Value(entity); return true; }
+            if (this.Global.Members.TryGetValue(name, out entity)) { value = new Value(entity); return true; }
 
             value = default;
             return false;

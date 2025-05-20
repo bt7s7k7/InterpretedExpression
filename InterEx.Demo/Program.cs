@@ -4,7 +4,7 @@ using InterEx;
 
 var engine = new IEEngine();
 
-var path = "./example/sample.ie";
+var path = "../example/sample.ie";
 
 ReflectionValueProvider.CreateAndRegister(engine.Integration).AddAllAssemblies();
 
@@ -13,9 +13,9 @@ Console.WriteLine(String.Join(", ", argv));
 
 if (argv is [_, "repl"])
 {
-    while (true)
+    var readline = new Readline();
+    readline.OnLine += (input) =>
     {
-        var input = Console.ReadLine();
         try
         {
             var document = IEDocument.ParseCode("anon", input);
@@ -32,7 +32,9 @@ if (argv is [_, "repl"])
         {
             Console.WriteLine("[ERR] " + error.FlattenMessage());
         }
-    }
+    };
+
+    readline.Run();
 }
 else if (argv is [_, "loop"])
 {
