@@ -8,12 +8,21 @@ namespace Test;
 
 public class ScriptedTest
 {
-    public IEEngine engine;
+    public IEEngine Engine;
+    public ImportLib ImportLib;
 
     public Value Run(string code, [CallerFilePath] string file = null)
     {
         var document = IEDocument.ParseCode(file, code);
-        return this.engine.Evaluate(document.Root, this.engine.PrepareCall());
+        return this.Engine.Evaluate(document.Root, this.Engine.PrepareCall());
+    }
+
+    public Module RunModule(string code, [CallerFilePath] string file = null)
+    {
+        var document = IEDocument.ParseCode(file, code);
+        var module = new Module("file://" + file);
+        module.Load(this.ImportLib, document);
+        return module;
     }
 
     public ScriptedTest()
@@ -29,10 +38,12 @@ public class ScriptedTest
             _integrationManager.AddExporter(new NUnitExporter());
         }
 
-        this.engine = new IEEngine(_integrationManager);
-        this.engine.AddGlobal("AssertEqual", (object a, object b) => Assert.That(a, Is.EqualTo(b)));
+        this.Engine = new IEEngine(_integrationManager);
+        this.Engine.AddGlobal("AssertEqual", (object a, object b) => Assert.That(a, Is.EqualTo(b)));
 
-        IEModulesInitializer.Initialize(this.engine);
+        var importLib = IEModulesInitializer.Initialize(this.Engine);
+        importLib.Loaders.Add(new FileSystemModuleLoader());
+        this.ImportLib = importLib;
     }
 
     private static IEIntegrationManager _integrationManager;

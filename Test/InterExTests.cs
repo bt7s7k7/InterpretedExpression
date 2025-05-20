@@ -82,7 +82,7 @@ public class InterExTests
             test.State
         """);
 
-        Assert.That(tester.engine.Integration.ExportValue<TestClass.StateType>(state), Is.EqualTo(TestClass.StateType.Wrong));
+        Assert.That(tester.Engine.Integration.ExportValue<TestClass.StateType>(state), Is.EqualTo(TestClass.StateType.Wrong));
     }
 
     [Test]
@@ -118,6 +118,15 @@ public class InterExTests
             AssertEqual(foo.variable, variable)
             foo.variable = 10
             AssertEqual(foo.variable, variable)
+        """);
+    }
+
+    [Test]
+    public void Modules()
+    {
+        new ScriptedTest().RunModule("""
+            $testModule = import("./testModule.ie")
+            AssertEqual(testModule.value, 58)
         """);
     }
 }
