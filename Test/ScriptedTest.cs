@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using InterEx;
 using InterEx.Integration;
 using InterEx.InterfaceTypes;
+using InterEx.Modules;
 
 namespace Test;
 
@@ -30,6 +31,8 @@ public class ScriptedTest
 
         this.engine = new IEEngine(_integrationManager);
         this.engine.AddGlobal("AssertEqual", (object a, object b) => Assert.That(a, Is.EqualTo(b)));
+
+        IEModulesInitializer.Initialize(this.engine);
     }
 
     private static IEIntegrationManager _integrationManager;

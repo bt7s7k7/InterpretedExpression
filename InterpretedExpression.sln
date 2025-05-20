@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InterEx.Demo", "InterEx.Demo\InterEx.Demo.csproj", "{41B050C8-782E-4362-8EA0-D25153E46A20}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InterEx.Modules", "InterEx.Modules\InterEx.Modules.csproj", "{6DEE3E59-58D5-4F18-A1EB-063F3CDFFFFB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{41B050C8-782E-4362-8EA0-D25153E46A20}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{41B050C8-782E-4362-8EA0-D25153E46A20}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{41B050C8-782E-4362-8EA0-D25153E46A20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DEE3E59-58D5-4F18-A1EB-063F3CDFFFFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DEE3E59-58D5-4F18-A1EB-063F3CDFFFFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DEE3E59-58D5-4F18-A1EB-063F3CDFFFFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DEE3E59-58D5-4F18-A1EB-063F3CDFFFFB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

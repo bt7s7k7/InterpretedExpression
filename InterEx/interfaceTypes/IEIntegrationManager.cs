@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using InterEx.CompilerInternals;
 using InterEx.Integration;
@@ -21,14 +22,21 @@ namespace InterEx.InterfaceTypes
             IntrinsicSource.InitializeIntegration(this);
         }
 
+        public ReadOnlyCollection<IValueImporter> Importers => this._importers.AsReadOnly();
         protected readonly List<IValueImporter> _importers = new();
         public void AddImporter(IValueImporter importer) => this._importers.Add(importer);
+
+        public ReadOnlyCollection<IValueExporter> Exporters => this._exporters.AsReadOnly();
         protected readonly List<IValueExporter> _exporters = new();
         public void AddExporter(IValueExporter exporter) => this._exporters.Add(exporter);
+        public ReadOnlyCollection<IValueExporter> ExportersFallback => this._exportersFallback.AsReadOnly();
         protected readonly List<IValueExporter> _exportersFallback = new();
         public void AddExporterFallback(IValueExporter exporter) => this._exportersFallback.Add(exporter);
+
+        public ReadOnlyCollection<IValueProvider> Providers => this._providers.AsReadOnly();
         protected readonly List<IValueProvider> _providers = new();
         public void AddProvider(IValueProvider provider) => this._providers.Add(provider);
+        public ReadOnlyCollection<IValueProvider> ProvidersFallback => this._providersFallback.AsReadOnly();
         protected readonly List<IValueProvider> _providersFallback = new();
         public void AddProviderFallback(IValueProvider provider) => this._providersFallback.Add(provider);
 

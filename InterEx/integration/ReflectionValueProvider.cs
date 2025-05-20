@@ -153,9 +153,9 @@ namespace InterEx
             return result;
         }
 
-        public ReflectionValueProvider AddClass(Type type)
+        public EntityInfo AddClass(Type type, string overridePath = null)
         {
-            var path = type.FullName;
+            var path = overridePath ?? type.FullName;
             var entity = this.GetEntity(path);
 
             if (type.IsGenericTypeDefinition)
@@ -167,7 +167,7 @@ namespace InterEx
                 entity.Class = type;
             }
 
-            return this;
+            return entity;
         }
 
         public ReflectionValueProvider AddAssembly(Assembly assembly)
@@ -201,6 +201,11 @@ namespace InterEx
 
         public static ReflectionValueProvider CreateAndRegister(IEIntegrationManager integration)
         {
+            if (integration.Providers.FirstOrDefault(v => v is ReflectionValueProvider, null) is ReflectionValueProvider existing)
+            {
+                return existing;
+            }
+
             var provider = new ReflectionValueProvider(integration);
 
             integration.AddExporter(provider);

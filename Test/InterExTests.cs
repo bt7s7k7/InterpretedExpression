@@ -84,4 +84,40 @@ public class InterExTests
 
         Assert.That(tester.engine.Integration.ExportValue<TestClass.StateType>(state), Is.EqualTo(TestClass.StateType.Wrong));
     }
+
+    [Test]
+    public void Declaration()
+    {
+        new ScriptedTest().Run("""
+            $foo = new()
+
+            Assert.Throws(InterEx.IERuntimeException, ^{
+                foo.name = "Hello"
+            })
+
+            foo.$name = "Hello"
+
+            AssertEqual(foo.name, "Hello")
+
+            $executed = false
+
+            foo._decl("value", ^{ executed = true, 52 }, null)
+
+            AssertEqual(foo.value, 52)
+            AssertEqual(executed, true)
+
+            Assert.Throws(InterEx.IERuntimeException, ^{
+                foo.value = 0
+            })
+
+            $variable = 1
+            foo._bind("variable", k_Ref(variable))
+
+            AssertEqual(foo.variable, variable)
+            variable = 5
+            AssertEqual(foo.variable, variable)
+            foo.variable = 10
+            AssertEqual(foo.variable, variable)
+        """);
+    }
 }

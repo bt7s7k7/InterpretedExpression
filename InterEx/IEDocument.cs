@@ -398,10 +398,20 @@ namespace InterEx
                     if (consume("."))
                     {
                         var start = index;
-                        var member = consumeWord();
-                        if (member.IsEmpty) throw new IEParsingException(formatException("Expected member name", index));
+                        string memberName;
+                        if (consume("$"))
+                        {
+                            var member = consumeWord();
+                            memberName = "$" + member.ToString();
+                        }
+                        else
+                        {
+                            var member = consumeWord();
+                            if (member.IsEmpty) throw new IEParsingException(formatException("Expected member name", index));
+                            memberName = member.ToString();
+                        }
 
-                        target = new Statement.MemberAccess(new IEPosition(path, input, start), target, member.ToString());
+                        target = new Statement.MemberAccess(new IEPosition(path, input, start), target, memberName);
                         continue;
                     }
 
