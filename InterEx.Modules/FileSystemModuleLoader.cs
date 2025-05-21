@@ -2,38 +2,27 @@ namespace InterEx.Modules;
 
 public class FileSystemModuleLoader : IModuleLoader
 {
-    protected Dictionary<string, Module> _cache = [];
+    protected Dictionary<string, ModuleLoadInfo> _cache = [];
 
-    public bool TryLoadModule(ImportLib context, Module importer, string name, out Module module)
+    public bool TryLoadModule(ImportLib context, Module importer, string name, out ModuleLoadInfo loadInfo)
     {
-        module = default;
-
-        string targetPath;
-        if (name.StartsWith("file://"))
+        if (!IModuleLoader.ResolveRelativeImportUsingProtocol(name, importer, "file", out var targetPath))
         {
-            targetPath = Path.Combine(name[6..]);
-        }
-        else if (importer.Name.StartsWith("file://") && name.StartsWith("./"))
-        {
-            targetPath = Path.Combine(Path.GetDirectoryName(importer.Name[6..]), name);
-        }
-        else
-        {
+            loadInfo = default;
             return false;
         }
 
         if (this._cache.TryGetValue(targetPath, out var existing))
         {
-            module = existing;
+            loadInfo = existing;
             return true;
         }
 
         var content = File.ReadAllText(targetPath);
         var document = IEDocument.ParseCode(targetPath, content);
 
-        module = new Module(targetPath);
-        this._cache.Add(targetPath, module);
-        module.Load(context, document);
+        loadInfo = new ModuleLoadInfo("file:/" + targetPath, document);
+        this._cache.Add(targetPath, loadInfo);
 
         return true;
     }

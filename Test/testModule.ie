@@ -1,1 +1,2 @@
 module.Exports.$value = 58
+module.Exports.$unique = new()

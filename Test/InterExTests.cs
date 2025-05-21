@@ -127,6 +127,9 @@ public class InterExTests
         new ScriptedTest().RunModule("""
             $testModule = import("./testModule.ie")
             AssertEqual(testModule.value, 58)
+
+            $testModuleAgain = import("./testModule.ie")
+            AssertEqual(testModule.unique, testModuleAgain.unique)
         """);
     }
 }
