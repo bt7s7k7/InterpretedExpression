@@ -190,7 +190,6 @@ namespace InterEx
         }
 
         public readonly EntityInfo Global;
-        protected readonly List<EntityInfo> _usings = new();
         public readonly IEIntegrationManager Integration;
 
         protected ReflectionValueProvider(IEIntegrationManager integration)
@@ -214,36 +213,69 @@ namespace InterEx
             return provider;
         }
 
-        public void Using(EntityInfo entity)
+        public static void ImportFromNamespace(EntityInfo entity, Scope scope)
         {
-            if (this._usings.Contains(entity)) return;
-            this._usings.Add(entity);
+            var usings = _GetUsingsInScope(scope, allowCreate: true);
+            if (usings.Contains(entity)) return;
+            usings.Add(entity);
         }
 
-        protected void UsingStatement(IEEngine engine, Statement target, Scope scope)
+        private static void _UsingStatement(IEEngine engine, Statement target, Scope scope)
         {
             var targetValue = engine.Evaluate(target, scope);
             var entity = engine.Integration.ExportValue<EntityInfo>(targetValue);
-            this.Using(entity);
+            ImportFromNamespace(entity, scope);
         }
 
-        bool IValueProvider.Find(IEIntegrationManager _, string name, out Value value)
+        private static List<EntityInfo> _defaultList = null;
+        private static List<EntityInfo> _GetUsingsInScope(Scope scope, bool allowCreate)
         {
-            if (name == "k_Using")
+            const string USINGS_KEY = "<rvp.usings>";
+
+            if (scope.TryGetOwn(USINGS_KEY, out var usingsVariable))
             {
-                var action = this.UsingStatement;
-                value = new Value(action);
-                return true;
+                return (List<EntityInfo>)usingsVariable.Content.Content;
             }
 
+            if (!allowCreate) return _defaultList ??= [];
+
+            var usings = new List<EntityInfo>();
+            scope.Declare(USINGS_KEY).Content = new Value(usings);
+            return usings;
+        }
+
+        bool IValueProvider.Find(IEIntegrationManager _, Scope scope, string name, out Value value)
+        {
             var entity = (EntityInfo)null;
 
-            foreach (var usingNamespace in this._usings)
+            if (scope.TryGetOwn("<rvp.usings>", out var usingsVariable))
             {
-                if (usingNamespace.Members.TryGetValue(name, out entity)) { value = new Value(entity); return true; }
+                foreach (var usingNamespace in _GetUsingsInScope(scope, allowCreate: false))
+                {
+                    if (usingNamespace.Members.TryGetValue(name, out entity))
+                    {
+                        value = new Value(entity);
+                        return true;
+                    }
+                }
             }
 
-            if (this.Global.Members.TryGetValue(name, out entity)) { value = new Value(entity); return true; }
+            if (scope.IsGlobal)
+            {
+                if (name == "k_Using")
+                {
+                    var action = _UsingStatement;
+                    value = new Value(action);
+                    return true;
+                }
+
+                if (this.Global.Members.TryGetValue(name, out entity))
+                {
+
+                    value = new Value(entity);
+                    return true;
+                }
+            }
 
             value = default;
             return false;

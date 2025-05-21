@@ -1,4 +1,6 @@
-﻿namespace Test;
+﻿using InterEx;
+
+namespace Test;
 
 public class InterExTests
 {
@@ -118,6 +120,35 @@ public class InterExTests
             AssertEqual(foo.variable, variable)
             foo.variable = 10
             AssertEqual(foo.variable, variable)
+        """);
+    }
+
+    [Test]
+    public void Using()
+    {
+        var tester = new ScriptedTest();
+        tester.Run("""
+            k_Using(System.Text)
+
+            AssertEqual(StringBuilder().Append(128).ToString(), "128")
+        """);
+
+        Assert.Throws<IERuntimeException>(() =>
+        {
+            tester.Run("""
+                StringBuilder()
+            """);
+        });
+
+        tester.Run("""
+            k_Using(System.Text)
+            k_Using(System)
+
+            $closure = ^{
+                AssertEqual(StringBuilder().Append(128).ToString(), "128")
+            }
+
+            closure()
         """);
     }
 

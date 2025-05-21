@@ -40,11 +40,11 @@ namespace InterEx.InterfaceTypes
         protected readonly List<IValueProvider> _providersFallback = new();
         public void AddProviderFallback(IValueProvider provider) => this._providersFallback.Add(provider);
 
-        public bool FindValue(string name, out Value value)
+        public bool FindValue(Scope scope, string name, out Value value)
         {
             foreach (var provider in this._providers)
             {
-                if (provider.Find(this, name, out value))
+                if (provider.Find(this, scope, name, out value))
                 {
                     return true;
                 }
@@ -52,7 +52,7 @@ namespace InterEx.InterfaceTypes
 
             foreach (var provider in this._providersFallback)
             {
-                if (provider.Find(this, name, out value))
+                if (provider.Find(this, scope, name, out value))
                 {
                     return true;
                 }

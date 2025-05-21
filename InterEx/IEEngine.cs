@@ -10,8 +10,7 @@ namespace InterEx
 {
     public partial class IEEngine
     {
-        protected class GlobalScopeType : Scope { }
-        public readonly Scope GlobalScope = new GlobalScopeType();
+        public readonly Scope GlobalScope = new Scope();
 
         public void AddGlobal(string name, object value)
         {
@@ -22,9 +21,9 @@ namespace InterEx
 
         public readonly IEIntegrationManager Integration;
 
-        public FunctionScope PrepareCall()
+        public Scope PrepareCall()
         {
-            return new FunctionScope(this.GlobalScope);
+            return new Scope(this.GlobalScope);
         }
 
         public Value GetProperty(Value receiver, string name)
@@ -111,13 +110,21 @@ namespace InterEx
 
         public Variable GetVariable(string name, IEPosition position, Scope scope)
         {
-            if (scope.Get(name, out var variable)) return variable;
-
-            if (this.Integration.FindValue(name, out var value))
+            if (scope.TryGetOwn(name, out var variable))
             {
-                var newVariable = this.GlobalScope.Declare(name);
+                return variable;
+            }
+
+            if (this.Integration.FindValue(scope, name, out var value))
+            {
+                var newVariable = scope.Declare(name);
                 newVariable.Content = value;
                 return newVariable;
+            }
+
+            if (scope.Parent is { } parent)
+            {
+                return this.GetVariable(name, position, parent);
             }
 
             throw new IERuntimeException(position.Format("Cannot find variable " + name));

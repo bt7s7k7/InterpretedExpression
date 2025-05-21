@@ -31,15 +31,16 @@ public class ScriptedTest
         if (_integrationManager == null)
         {
             _integrationManager = new IEIntegrationManager();
-            var provider = ReflectionValueProvider.CreateAndRegister(_integrationManager);
+            _provider = ReflectionValueProvider.CreateAndRegister(_integrationManager);
 
-            provider.AddAllAssemblies();
-            provider.Using(provider.Global.Members["NUnit"].Members["Framework"]);
+            _provider.AddAllAssemblies();
             _integrationManager.AddExporter(new NUnitExporter());
         }
 
         this.Engine = new IEEngine(_integrationManager);
         this.Engine.AddGlobal("AssertEqual", (object a, object b) => Assert.That(a, Is.EqualTo(b)));
+
+        ReflectionValueProvider.ImportFromNamespace(_provider.Global.Members["NUnit"].Members["Framework"], this.Engine.GlobalScope);
 
         var importLib = IEModulesInitializer.Initialize(this.Engine);
         importLib.Loaders.Add(new FileSystemModuleLoader());
@@ -47,6 +48,7 @@ public class ScriptedTest
     }
 
     private static IEIntegrationManager _integrationManager;
+    private static ReflectionValueProvider _provider;
 
     private class NUnitExporter : IValueExporter
     {

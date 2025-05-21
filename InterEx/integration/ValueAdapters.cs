@@ -1,4 +1,5 @@
 using System;
+using InterEx.CompilerInternals;
 using InterEx.InterfaceTypes;
 
 namespace InterEx.Integration
@@ -15,6 +16,6 @@ namespace InterEx.Integration
 
     public interface IValueProvider
     {
-        public bool Find(IEIntegrationManager integration, string name, out Value value);
+        public bool Find(IEIntegrationManager integration, Scope scope, string name, out Value value);
     }
 }
