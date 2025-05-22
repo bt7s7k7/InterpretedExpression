@@ -195,6 +195,11 @@ namespace InterEx.CompilerInternals
                     var variable = engine.GetVariable(variableAccess.Name, variableAccess.Position, scope);
                     return (IEReference)new IEReference.VariableReference(engine, variable);
                 }
+                else if (value is Statement.VariableDeclaration variableDeclaration)
+                {
+                    var variable = scope.Declare(variableDeclaration.Name);
+                    return (IEReference)new IEReference.VariableReference(engine, variable);
+                }
                 else throw new IERuntimeException("Can only get reference to a variable or object property");
             });
 
