@@ -190,6 +190,36 @@ public class InterExTests
     }
 
     [Test]
+    public void If()
+    {
+        var tester = new ScriptedTest();
+
+        tester.Run("""
+            $value = 5
+
+            AssertEqual(k_If(
+                (value.eq(1)) "one"
+                (value.eq(5)) "five"
+            ), "five")
+
+            AssertEqual(k_If(
+                (value.eq(1)) "one"
+                (value.eq(6)) "six"
+                "missing"
+            ), "missing")
+
+            AssertEqual(k_If(
+                "default"
+            ), "default")
+
+            AssertEqual(k_If(
+                (value.eq(1)) "one"
+                (value.eq(6)) "six"
+            ), null)
+        """);
+    }
+
+    [Test]
     public void Switch()
     {
         var tester = new ScriptedTest();

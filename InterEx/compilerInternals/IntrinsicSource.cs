@@ -232,6 +232,33 @@ namespace InterEx.CompilerInternals
 
                 return default;
             }));
+
+            engine.AddGlobal("k_If", (ReflectionCache.VariadicFunction)((argumentValues) =>
+            {
+                var arguments = argumentValues[1..].Select(v => ((Value)v).Content).ToArray();
+
+                var engine = (IEEngine)arguments[0];
+                var scope = (Scope)arguments[^1];
+
+                for (int i = 1; i < arguments.Length - 1; i++)
+                {
+                    if (i < arguments.Length - 2)
+                    {
+
+                        var predicate = engine.Evaluate((Statement)arguments[i], scope);
+                        if (engine.Integration.ExportValue<bool>(predicate))
+                        {
+                            return engine.Evaluate((Statement)arguments[i + 1], scope);
+                        }
+                        i++;
+                    }
+                    else
+                    {
+                        return engine.Evaluate((Statement)arguments[i], scope);
+                    }
+                }
+
+                return default;
             }));
         }
     }
