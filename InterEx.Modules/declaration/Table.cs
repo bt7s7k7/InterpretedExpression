@@ -27,21 +27,24 @@ public class Table : ICustomValue
 
     public void DeclareProperty(string name, Value value)
     {
-        this.Properties.Add(name, new PropertyDescriptor(value));
+        if (!this.Properties.TryAdd(name, new PropertyDescriptor(value))) throw new ArgumentException($"Duplicate declaration of property '{name}'");
     }
 
     public void DeclareProperty(string name, PropertyDescriptor value)
     {
-        this.Properties.Add(name, value);
+        if (!this.Properties.TryAdd(name, value)) throw new ArgumentException($"Duplicate declaration of property '{name}'");
     }
 
     public void DeclareProperty(string name, Func<Value> getter, Action<Value> setter)
     {
-        this.Properties.Add(name, new PropertyDescriptor
+        if (!this.Properties.TryAdd(name, new PropertyDescriptor
         {
             Getter = getter,
             Setter = setter,
-        });
+        }))
+        {
+            throw new ArgumentException($"Duplicate declaration of property '{name}'");
+        }
     }
 
     public void BindProperty(string name, IEReference reference)
@@ -60,7 +63,45 @@ public class Table : ICustomValue
     {
         if (!this.TryDeleteProperty(name))
         {
-            throw new ArgumentException($"Property '{name}' does not exist");
+            throw new KeyNotFoundException($"Property '{name}' does not exist");
+        }
+    }
+
+    public bool TryGetProperty(string name, out Value value)
+    {
+        ref var property = ref CollectionsMarshal.GetValueRefOrNullRef(this.Properties, name);
+
+        if (Unsafe.IsNullRef(ref property))
+        {
+            value = default;
+            return false;
+        }
+
+        value = property.GetValue();
+        return true;
+    }
+
+    public Value this[string name]
+    {
+        get
+        {
+            ref var property = ref CollectionsMarshal.GetValueRefOrNullRef(this.Properties, name);
+            if (Unsafe.IsNullRef(ref property))
+            {
+                throw new KeyNotFoundException($"Property '{name}' does not exist");
+            }
+
+            return property.GetValue();
+        }
+        set
+        {
+            ref var property = ref CollectionsMarshal.GetValueRefOrNullRef(this.Properties, name);
+            if (Unsafe.IsNullRef(ref property))
+            {
+                this.DeclareProperty(name, value);
+            }
+
+            property.SetValue(value);
         }
     }
 
