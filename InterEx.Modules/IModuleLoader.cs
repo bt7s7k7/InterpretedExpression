@@ -5,6 +5,7 @@ public readonly record struct ModuleLoadInfo(string Name, IEDocument Document);
 public interface IModuleLoader
 {
     public bool TryLoadModule(ImportLib context, Module importer, string name, out ModuleLoadInfo loadInfo);
+    public void ClearCache() { }
 
     public static bool ResolveRelativeImportUsingProtocol(string name, Module importer, string protocol, out string targetPath)
     {

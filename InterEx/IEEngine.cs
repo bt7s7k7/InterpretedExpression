@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using InterEx.CompilerInternals;
 using InterEx.Integration;
 using InterEx.InterfaceTypes;
@@ -272,6 +273,32 @@ namespace InterEx
 
                 if (statement is Statement.StringLiteral stringLiteral) return new Value(stringLiteral.Value);
                 if (statement is Statement.NumberLiteral numberLiteral) return new Value(numberLiteral.Value);
+
+                if (statement is Statement.TemplateLiteral templateLiteral)
+                {
+                    var builder = new DefaultInterpolatedStringHandler();
+
+                    foreach (var fragment in templateLiteral.Fragments)
+                    {
+                        if (fragment is (Statement.StringLiteral literal, null))
+                        {
+                            builder.AppendLiteral(literal.Value);
+                            continue;
+                        }
+
+                        var value = this.Evaluate(fragment.Statement, scope);
+                        if (fragment.Format is { } format)
+                        {
+                            builder.AppendFormatted(value.Content, format);
+                        }
+                        else
+                        {
+                            builder.AppendFormatted(value.Content);
+                        }
+                    }
+
+                    return new Value(builder.ToString());
+                }
 
                 throw new IERuntimeException(statement.Position.Format("Invalid statement"));
             }

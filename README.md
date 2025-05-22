@@ -105,8 +105,9 @@ You can define delegates using the `^` operator. The last expression contained w
 
 The are also literals for numbers, strings, arrays and dictionaries.
 
-```js
+```cs
 "string literal"
+$"interpolated literal ${52:F2}"
 350420
 [elem1, elem2, elem3]
 { key: value, key2: 58 }

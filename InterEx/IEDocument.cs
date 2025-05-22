@@ -35,6 +35,13 @@ namespace InterEx
                         {"kind", Statement.StringLiteral.Kind},
                         {"value", literal.Value}
                     }),
+                    Statement.TemplateLiteral literal => makeObject(new() {
+                        {"kind", Statement.TemplateLiteral.Kind},
+                        {"fragments", makeArray(literal.Fragments.Select(((v) => new JsonObject() {
+                            {"statement", visit(v.Statement)},
+                            {"format", v.Format},
+                        })))}
+                    }),
                     Statement.NumberLiteral literal => makeObject(new() {
                         {"kind", Statement.NumberLiteral.Kind},
                         {"value", literal.Value}
@@ -208,7 +215,7 @@ namespace InterEx
                 skippedNewline = currSkippedNewLine;
             }
 
-            List<Statement> parseBlock(string term)
+            List<Statement> parseBlock(params ReadOnlySpan<string> terms)
             {
                 var result = new List<Statement>();
 
@@ -217,15 +224,55 @@ namespace InterEx
                     skipWhitespace();
                     if (isDone()) break;
 
-                    if (term != null && consume(term)) break;
+                    if (!terms.IsEmpty)
+                    {
+                        foreach (var term in terms)
+                        {
+                            if (consume(term)) goto terminate_block;
+                        }
+                    }
                     if (consume(",")) continue;
                     result.Add(parseExpression());
                 }
+            terminate_block:
 
                 return result;
             }
 
             string formatException(string message, int index) => new IEPosition(path, input, index).Format(message);
+
+            char parseEscapeSequence()
+            {
+                if (isDone()) throw new IEParsingException(formatException("Unexpected EOF", index));
+
+                var e = input[index];
+                index++;
+                if (e == 'x')
+                {
+                    var charStart = index;
+                    index++;
+                    if (isDone()) throw new IEParsingException(formatException("Unexpected EOF", index));
+                    index++;
+                    if (!Byte.TryParse(input.AsSpan(charStart, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var charValue))
+                    {
+                        throw new IEParsingException(formatException("Invalid number", index));
+                    }
+                    return (char)charValue;
+                }
+
+                return e switch
+                {
+                    'n' => '\n',
+                    'r' => '\r',
+                    't' => '\t',
+                    '\'' => '\'',
+                    '"' => '"',
+                    '`' => '`',
+                    '\\' => '\\',
+                    '$' => '$',
+                    _ => throw new IEParsingException(formatException("Invalid escape character", index))
+                };
+            }
 
             Statement parseString(char term)
             {
@@ -240,36 +287,7 @@ namespace InterEx
                     if (c == term) break;
                     if (c == '\\')
                     {
-                        if (isDone()) throw new IEParsingException(formatException("Unexpected EOF", index));
-
-                        var e = input[index];
-                        index++;
-                        if (e == 'x')
-                        {
-                            var charStart = index;
-                            index++;
-                            if (isDone()) throw new IEParsingException(formatException("Unexpected EOF", index));
-                            index++;
-                            if (!Byte.TryParse(input.AsSpan(charStart, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var charValue))
-                            {
-                                throw new IEParsingException(formatException("Invalid number", index));
-                            }
-                            value.Append((char)charValue);
-                            continue;
-                        }
-
-                        value.Append(e switch
-                        {
-                            'n' => '\n',
-                            'r' => '\r',
-                            't' => '\t',
-                            '\'' => '\'',
-                            '"' => '"',
-                            '`' => '`',
-                            '\\' => '\\',
-                            _ => throw new IEParsingException(formatException("Invalid escape character", index))
-                        });
-
+                        value.Append(parseEscapeSequence());
                         continue;
                     }
 
@@ -277,6 +295,75 @@ namespace InterEx
                 }
 
                 return new Statement.StringLiteral(new IEPosition(path, input, start), value.ToString());
+            }
+
+            Statement parseTemplate(char term)
+            {
+                var template = new Statement.TemplateLiteral(new IEPosition(path, input, index - 1), []);
+                var fragmentStart = index;
+                StringBuilder fragment = null;
+
+                while (!isDone())
+                {
+                    var c = input[index];
+                    index++;
+
+                    if (c == term) break;
+                    if (c == '\\')
+                    {
+                        parseEscapeSequence();
+                        continue;
+                    }
+
+                    if (c == '$' && !isDone() && input[index] == '{')
+                    {
+                        index++;
+                        var statements = parseBlock("}", ":");
+                        var statementStart = index;
+
+                        string formatString = null;
+                        if (input[index - 1] == ':')
+                        {
+                            formatString = new String(readWhile(() => input[index] != '}'));
+                            index++;
+                        }
+
+                        if (statements.Count == 0) continue;
+
+                        if (fragment != null)
+                        {
+                            template.Fragments.Add((new Statement.StringLiteral(new IEPosition(path, input, fragmentStart), fragment.ToString()), null));
+                            fragment = null;
+                        }
+
+                        if (statements.Count == 1)
+                        {
+                            template.Fragments.Add((statements[0], formatString));
+                        }
+                        else
+                        {
+                            template.Fragments.Add((new Statement.Group(new IEPosition(path, input, statementStart), statements), formatString));
+                        }
+
+                        continue;
+                    }
+
+                    if (fragment == null)
+                    {
+                        fragment = new();
+                        fragmentStart = index - 1;
+                    }
+
+                    fragment.Append(c);
+                }
+
+                if (fragment != null)
+                {
+                    template.Fragments.Add((new Statement.StringLiteral(new IEPosition(path, input, fragmentStart), fragment.ToString()), null));
+                    fragment = null;
+                }
+
+                return template;
             }
 
             Statement parseTarget()
@@ -304,9 +391,13 @@ namespace InterEx
                     return new Statement.NumberLiteral(new IEPosition(path, input, start), number);
                 }
 
+                if (consume("$\"")) return parseTemplate('"');
+                if (consume("$'")) return parseTemplate('\'');
+                if (consume("$`")) return parseTemplate('`');
+
                 if (consume("\"")) return parseString('"');
                 if (consume("'")) return parseString('\'');
-                if (consume("`")) return parseString('`');
+                if (consume("'")) return parseString('`');
 
                 if (consume("$"))
                 {

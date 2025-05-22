@@ -11,10 +11,10 @@
         "global": {
             "patterns": [
                 {
-                    "include": "#keywords"
+                    "include": "#strings"
                 },
                 {
-                    "include": "#strings"
+                    "include": "#keywords"
                 },
                 {
                     "include": "#numbers"
@@ -54,6 +54,38 @@
                 }
             ]
         },
+        "string-template-format": {
+            "name": "storage.type.format.inter-ex",
+            "begin": ":",
+            "end": "(?=})"
+        },
+        "string-template-expression": {
+            "patterns": [
+                {
+                    "name": "meta.template.expression.inter-ex",
+                    "begin": "(\\$\\{)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "punctuation.definition.template-expression.begin.inter-ex"
+                        }
+                    },
+                    "end": "(\\})",
+                    "endCaptures": {
+                        "1": {
+                            "name": "punctuation.definition.template-expression.end.inter-ex"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "include": "#string-template-format"
+                        },
+                        {
+                            "include": "#global"
+                        }
+                    ]
+                }
+            ]
+        },
         "strings": {
             "patterns": [
                 {
@@ -77,12 +109,51 @@
                     ]
                 },
                 {
-                    "name": "string.quoted.other.inter-ex",
+                    "name": "string.quoted.single.inter-ex",
                     "begin": "`",
                     "end": "`",
                     "patterns": [
                         {
                             "include": "#string-escape"
+                        }
+                    ]
+                },
+                {
+                    "name": "string.quoted.other.inter-ex",
+                    "begin": "\\$\"",
+                    "end": "\"",
+                    "patterns": [
+                        {
+                            "include": "#string-escape"
+                        },
+                        {
+                            "include": "#string-template-expression"
+                        }
+                    ]
+                },
+                {
+                    "name": "string.quoted.other.inter-ex",
+                    "begin": "\\$'",
+                    "end": "'",
+                    "patterns": [
+                        {
+                            "include": "#string-escape"
+                        },
+                        {
+                            "include": "#string-template-expression"
+                        }
+                    ]
+                },
+                {
+                    "name": "string.quoted.other.inter-ex",
+                    "begin": "\\$`",
+                    "end": "`",
+                    "patterns": [
+                        {
+                            "include": "#string-escape"
+                        },
+                        {
+                            "include": "#string-template-expression"
                         }
                     ]
                 }

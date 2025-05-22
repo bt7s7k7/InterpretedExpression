@@ -163,4 +163,15 @@ public class InterExTests
             AssertEqual(testModule.unique, testModuleAgain.unique)
         """);
     }
+
+    [Test]
+    public void TemplateString()
+    {
+        new ScriptedTest().Run("""
+            AssertEqual($"hello", "hello")
+            AssertEqual($"${52}", "52")
+            AssertEqual($"${52:F2}", "52.00")
+            AssertEqual($"the number ${0:F2} has two", "the number 0.00 has two")
+        """);
+    }
 }

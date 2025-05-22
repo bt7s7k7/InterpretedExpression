@@ -7,6 +7,14 @@ public class ImportLib(IEEngine engine)
 
     protected readonly Dictionary<string, Module> _cache = [];
 
+    public void ClearCache()
+    {
+        foreach (var loader in this.Loaders)
+        {
+            loader.ClearCache();
+        }
+    }
+
     public bool TryResolveModule(string name, Module importer, out ModuleLoadInfo loadInfo)
     {
         foreach (var loader in this.Loaders)

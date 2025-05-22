@@ -4,6 +4,11 @@ public class FileSystemModuleLoader : IModuleLoader
 {
     protected Dictionary<string, ModuleLoadInfo> _cache = [];
 
+    public void ClearCache()
+    {
+        this._cache.Clear();
+    }
+
     public bool TryLoadModule(ImportLib context, Module importer, string name, out ModuleLoadInfo loadInfo)
     {
         if (!IModuleLoader.ResolveRelativeImportUsingProtocol(name, importer, "file", out var targetPath))

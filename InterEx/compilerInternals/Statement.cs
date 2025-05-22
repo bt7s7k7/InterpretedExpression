@@ -6,7 +6,8 @@ namespace InterEx.CompilerInternals
 {
     public abstract record class Statement(IEPosition Position)
     {
-        public sealed record class StringLiteral(IEPosition Position, string Value) : Statement(Position) { public const string Kind = "string"; };
+        public sealed record class StringLiteral(IEPosition Position, string Value) : Statement(Position) { public const string Kind = "string"; }
+        public sealed record class TemplateLiteral(IEPosition Position, List<(Statement Statement, string Format)> Fragments) : Statement(Position) { public const string Kind = "template"; }
         public sealed record class NumberLiteral(IEPosition Position, double Value) : Statement(Position) { public const string Kind = "number"; }
         public sealed record class ObjectLiteral(IEPosition Position, Dictionary<string, Statement> Properties) : Statement(Position) { public const string Kind = "object"; }
         public sealed record class VariableAccess(IEPosition Position, string Name) : Statement(Position) { public const string Kind = "var"; }
