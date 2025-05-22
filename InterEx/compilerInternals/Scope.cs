@@ -31,5 +31,21 @@ namespace InterEx.CompilerInternals
         {
             return this._variables.TryGetValue(name, out variable);
         }
+
+        public Value this[string name]
+        {
+            get => this._variables[name].Content;
+            set
+            {
+                if (this._variables.TryGetValue(name, out var variable))
+                {
+                    variable.Content = value;
+                }
+                else
+                {
+                    this.Declare(name).Content = value;
+                }
+            }
+        }
     }
 }

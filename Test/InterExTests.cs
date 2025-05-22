@@ -174,4 +174,18 @@ public class InterExTests
             AssertEqual($"the number ${0:F2} has two", "the number 0.00 has two")
         """);
     }
+
+    [Test]
+    public void ScopeManipulation()
+    {
+        var tester = new ScriptedTest();
+
+        tester.Run("""
+            GLOBAL.at("value") = 10
+        """);
+
+        Assert.That(tester.Engine.Integration.ExportValue<double>(tester.Run("""
+            value
+        """)), Is.EqualTo(10.0));
+    }
 }
