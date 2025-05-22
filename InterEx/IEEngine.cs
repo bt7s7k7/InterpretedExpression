@@ -88,6 +88,11 @@ namespace InterEx
                 if (customValue.Invoke(this, invocation, method, out var result, arguments)) return result;
             }
 
+            if (receiver.Content is ReflectionCache.VariadicFunction variadicFunction)
+            {
+                return this.BridgeMethodCall([new ReflectionCache.FunctionInfo(variadicFunction, null)], invocation, receiver, arguments);
+            }
+
             var type = receiver.Content?.GetType();
             var info = type == null ? null : this.Integration.InstanceCache.GetClassInfo(type);
 

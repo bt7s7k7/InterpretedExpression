@@ -13,10 +13,14 @@ namespace InterEx.CompilerInternals
         {
             if (value.Content is double number)
             {
-                if (type == typeof(int)) { data = (int)number; return true; };
-                if (type == typeof(float)) { data = (float)number; return true; };
-                if (type == typeof(short)) { data = (short)number; return true; };
-                if (type == typeof(long)) { data = (long)number; return true; };
+                if (type == typeof(int)) { data = (int)number; return true; }
+                ;
+                if (type == typeof(float)) { data = (float)number; return true; }
+                ;
+                if (type == typeof(short)) { data = (short)number; return true; }
+                ;
+                if (type == typeof(long)) { data = (long)number; return true; }
+                ;
             }
 
             if (value.Content is IEnumerable enumerable)
@@ -194,7 +198,41 @@ namespace InterEx.CompilerInternals
                 else throw new IERuntimeException("Can only get reference to a variable or object property");
             });
 
+            engine.AddGlobal("k_Switch", (ReflectionCache.VariadicFunction)((argumentValues) =>
+            {
+                var arguments = argumentValues[1..].Select(v => ((Value)v).Content).ToArray();
 
+                if (arguments.Length == 2)
+                {
+                    throw new IERuntimeException("Missing value argument");
+                }
+
+                var engine = (IEEngine)arguments[0];
+                var scope = (Scope)arguments[^1];
+
+                var value = engine.Evaluate((Statement)arguments[1], scope);
+
+                for (int i = 2; i < arguments.Length - 1; i++)
+                {
+                    if (i < arguments.Length - 2)
+                    {
+
+                        var predicate = engine.Evaluate((Statement)arguments[i], scope);
+                        if (IEOperators.eq(value.Content, predicate.Content))
+                        {
+                            return engine.Evaluate((Statement)arguments[i + 1], scope);
+                        }
+                        i++;
+                    }
+                    else
+                    {
+                        return engine.Evaluate((Statement)arguments[i], scope);
+                    }
+                }
+
+                return default;
+            }));
+            }));
         }
     }
 }

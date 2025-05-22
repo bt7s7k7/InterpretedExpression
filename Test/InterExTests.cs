@@ -188,4 +188,32 @@ public class InterExTests
             value
         """)), Is.EqualTo(10.0));
     }
+
+    [Test]
+    public void Switch()
+    {
+        var tester = new ScriptedTest();
+
+        tester.Run("""
+            AssertEqual(k_Switch(5,
+                (1) "one"
+                (5) "five"
+            ), "five")
+
+            AssertEqual(k_Switch(6,
+                (1) "one"
+                (5) "five"
+                "missing"
+            ), "missing")
+
+            AssertEqual(k_Switch(6,
+                "default"
+            ), "default")
+
+            AssertEqual(k_Switch(6,
+                (1) "one"
+                (5) "five"
+            ), null)
+        """);
+    }
 }
