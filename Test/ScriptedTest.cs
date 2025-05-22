@@ -11,9 +11,9 @@ public class ScriptedTest
     public IEEngine Engine;
     public ImportLib ImportLib;
 
-    public Value Run(string code, [CallerFilePath] string file = null)
+    public Value Run(string code, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
     {
-        var document = IEDocument.ParseCode(file, code);
+        var document = IEDocument.ParseCode(file, new String('\n', line) + code);
         return this.Engine.Evaluate(document.Root, this.Engine.PrepareCall());
     }
 
