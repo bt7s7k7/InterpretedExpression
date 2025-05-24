@@ -98,7 +98,6 @@ namespace InterEx
                 {
                     var info = this.Owner.Integration.StaticCache.GetClassInfo(this.Class);
                     if (!info.Functions.TryGetValue(name, out var overloads)) { result = default; return false; }
-                    ;
 
                     result = engine.BridgeMethodCall(overloads, invocation, new Value(null), arguments);
                     return true;

@@ -14,13 +14,9 @@ namespace InterEx.CompilerInternals
             if (value.Content is double number)
             {
                 if (type == typeof(int)) { data = (int)number; return true; }
-                ;
                 if (type == typeof(float)) { data = (float)number; return true; }
-                ;
                 if (type == typeof(short)) { data = (short)number; return true; }
-                ;
                 if (type == typeof(long)) { data = (long)number; return true; }
-                ;
             }
 
             if (value.Content is IEnumerable enumerable)
