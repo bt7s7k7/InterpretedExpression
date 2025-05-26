@@ -12,14 +12,6 @@ public class InterExTests
     }
 
     [Test]
-    public void IntegrationWorks()
-    {
-        new ScriptedTest().Run("""
-            Assert.Pass()
-        """);
-    }
-
-    [Test]
     public void Delegates()
     {
         new ScriptedTest().Run("""

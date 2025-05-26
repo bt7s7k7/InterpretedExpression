@@ -22,7 +22,6 @@
   <ItemGroup>
     <ProjectReference Include="..\InterEx.Modules\InterEx.Modules.csproj" />
     <ProjectReference Include="..\InterEx\InterEx.csproj" />
-    <ProjectReference Include="..\InterEx.Demo\InterEx.Demo.csproj" />
   </ItemGroup>
 
 </Project>
