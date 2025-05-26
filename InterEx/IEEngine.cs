@@ -311,7 +311,7 @@ namespace InterEx
             {
                 if (error is IERuntimeException) throw;
                 if (error.InnerException is IERuntimeException inner) throw new IERuntimeException(statement.Position.Format("Invalid operation"), inner);
-                throw;
+                throw new IERuntimeException(statement.Position.Format("Invalid operation"), error);
             }
         }
 
