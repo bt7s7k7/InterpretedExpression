@@ -99,6 +99,7 @@ public class Table : ICustomValue
             if (Unsafe.IsNullRef(ref property))
             {
                 this.DeclareProperty(name, value);
+                return;
             }
 
             property.SetValue(value);
