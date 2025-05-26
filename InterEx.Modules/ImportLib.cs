@@ -9,6 +9,7 @@ public class ImportLib(IEEngine engine)
 
     public void ClearCache()
     {
+        this._cache.Clear();
         foreach (var loader in this.Loaders)
         {
             loader.ClearCache();

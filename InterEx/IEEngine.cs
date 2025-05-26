@@ -85,7 +85,13 @@ namespace InterEx
 
             if (receiver.Content is ICustomValue customValue)
             {
-                if (customValue.Invoke(this, invocation, method, out var result, arguments)) return result;
+                if (customValue.Invoke(this, invocation, method, out var result, arguments))
+                {
+                    return result;
+                }
+
+                var getterResult = this.GetProperty(receiver, method);
+                return this.Invoke(getterResult, invocation, "Invoke", arguments);
             }
 
             if (receiver.Content is ReflectionCache.VariadicFunction variadicFunction)

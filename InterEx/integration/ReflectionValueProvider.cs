@@ -94,23 +94,42 @@ namespace InterEx
                     return constructor.Invoke(engine, invocation, "", out result, arguments);
                 }
 
+                if (name.Length > 0)
+                {
+                    if (this.Class == null) { result = default; return false; }
+                    var info = this.Owner.Integration.StaticCache.GetClassInfo(this.Class);
+                    if (!info.Functions.TryGetValue(name, out var staticMethodOverloads)) { result = default; return false; }
+                    result = engine.BridgeMethodCall(staticMethodOverloads, invocation, new Value(null), arguments);
+                    return true;
+                }
+
+                List<ReflectionCache.FunctionInfo> overloads = null;
+
                 if (this.Class != null)
                 {
                     var info = this.Owner.Integration.StaticCache.GetClassInfo(this.Class);
-                    if (!info.Functions.TryGetValue(name, out var overloads)) { result = default; return false; }
-
-                    result = engine.BridgeMethodCall(overloads, invocation, new Value(null), arguments);
-                    return true;
+                    info.Functions.TryGetValue(name, out overloads);
                 }
 
                 if (this.Generics != null)
                 {
-                    result = engine.BridgeMethodCall(this.Generics, invocation, new Value(null), arguments);
+                    if (overloads != null)
+                    {
+                        overloads = [.. overloads, .. this.Generics];
+                    }
+                    else
+                    {
+                        overloads = this.Generics;
+                    }
+                }
+
+                if (overloads != null)
+                {
+                    result = engine.BridgeMethodCall(overloads, invocation, new Value(null), arguments);
                     return true;
                 }
 
-                result = default;
-                return false;
+                throw new IERuntimeException($"Entity '{this}' is not constructible");
             }
 
             public bool Set(IEEngine engine, string name, Value value)
@@ -130,6 +149,7 @@ namespace InterEx
             {
                 return "(" + (this switch
                 {
+                    { Class: not null, Generics: not null } => "generic+class",
                     { Class: not null } => "class",
                     { Generics: not null } => "generic",
                     _ => "namespace"

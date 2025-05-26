@@ -13,7 +13,7 @@ namespace InterEx.Integration
 
         public delegate object VariadicFunction(object[] arguments);
 
-        public class FunctionInfo
+        public record class FunctionInfo
         {
             public readonly object Target;
             public readonly Type[] Parameters;
