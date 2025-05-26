@@ -48,6 +48,9 @@ public class InterExTests
 
             AssertEqual(String.Join(", ", list), "a, b, c")
 
+            $arrayList = System.Collections.ArrayList().init("a", "b", "c")
+            AssertEqual(String.Join(", ", arrayList), "a, b, c")
+
             $dictionary = Dictionary(String, Int32)().init({ q: 5, a: 10, z: 21 })
 
             $builder = StringBuilder()

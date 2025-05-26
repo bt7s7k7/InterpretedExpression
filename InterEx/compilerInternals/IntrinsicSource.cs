@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using InterEx.Integration;
 using InterEx.InterfaceTypes;
 
@@ -134,13 +135,13 @@ namespace InterEx.CompilerInternals
 
                 if (type.IsAssignableTo(typeof(IList)))
                 {
-                    var listInterface = type.GetInterfaces().First(v => v.GetGenericTypeDefinition() == IntrinsicSource.ListType);
+                    var listInterface = type.GetInterfaces().FirstOrDefault(v => v.IsConstructedGenericType && v.GetGenericTypeDefinition() == IntrinsicSource.ListType);
                     if (listInterface != null)
                     {
                         var genericParameters = listInterface.GetGenericArguments();
                         var valueType = genericParameters[0];
 
-                        info.AddFunction("init", new((ReflectionCache.VariadicFunction)((object[] arguments) =>
+                        info.AddFunction("init", new((ReflectionCache.VariadicFunction)((arguments) =>
                         {
                             var receiver = (IList)arguments[0];
 
@@ -153,6 +154,28 @@ namespace InterEx.CompilerInternals
                         }), null));
 
                         return;
+                    }
+                }
+
+                if (info.Functions.TryGetValue("Add", out var addMethods))
+                {
+                    var addMethod = addMethods.FirstOrDefault(v => v.Parameters.Length == 1);
+                    if (addMethod != null)
+                    {
+                        var valueType = addMethod.Parameters[0];
+                        var addMethodInfo = (MethodInfo)addMethod.Target;
+
+                        info.AddFunction("init", new((ReflectionCache.VariadicFunction)((arguments) =>
+                        {
+                            var receiver = arguments[0];
+
+                            foreach (var element in arguments.Skip(1).Cast<Value>())
+                            {
+                                addMethodInfo.Invoke(receiver, [integration.ExportValue(element, valueType)]);
+                            }
+
+                            return receiver;
+                        }), null));
                     }
                 }
 
