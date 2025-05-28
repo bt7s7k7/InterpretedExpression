@@ -6,10 +6,10 @@ using System.Reflection;
 
 namespace InterEx.Integration
 {
-    public class ReflectionCache
+    public class ReflectionCache(ReflectionCache.BindingType binding)
     {
         public enum BindingType { Static, Instance }
-        public BindingType Binding;
+        public BindingType Binding = binding;
 
         public delegate object VariadicFunction(object[] arguments);
 
@@ -45,25 +45,25 @@ namespace InterEx.Integration
 
         public class ClassInfo
         {
-            public readonly Dictionary<string, List<FunctionInfo>> Functions = new();
+            public readonly Dictionary<string, List<FunctionInfo>> Functions = [];
 
             public void AddFunction(string name, FunctionInfo method)
             {
                 if (this.Functions.TryGetValue(name, out var list)) list.Add(method);
-                else this.Functions.Add(name, new() { method });
+                else this.Functions.Add(name, [method]);
             }
 
-            public readonly Dictionary<string, MemberInfo> Properties = new();
+            public readonly Dictionary<string, MemberInfo> Properties = [];
         }
 
         public delegate void ClassPatcher(ReflectionCache owner, Type type, ClassInfo info);
-        protected List<ClassPatcher> _patchers = new();
+        protected List<ClassPatcher> _patchers = [];
         public void AddPatcher(ClassPatcher patcher)
         {
             this._patchers.Add(patcher);
         }
 
-        protected Dictionary<Type, ClassInfo> _classCache = new();
+        protected Dictionary<Type, ClassInfo> _classCache = [];
         public ClassInfo GetClassInfo(Type type)
         {
             if (this._classCache.TryGetValue(type, out var existing)) return existing;
@@ -97,7 +97,7 @@ namespace InterEx.Integration
                 if (indexParameters.Length == 1)
                 {
                     var getterParams = indexParameters.Select(v => v.ParameterType).ToArray();
-                    var setterParams = getterParams.Concat(new[] { property.PropertyType }).ToArray();
+                    var setterParams = getterParams.Concat([property.PropertyType]).ToArray();
 
                     if (type.IsAssignableTo(typeof(IDictionary)))
                     {
@@ -129,12 +129,12 @@ namespace InterEx.Integration
                     {
                         info.AddFunction("at", new((object receiver, object key) =>
                         {
-                            return property.GetValue(receiver, new[] { key });
+                            return property.GetValue(receiver, [key]);
                         }, getterParams));
 
                         info.AddFunction("at", new((object receiver, object key, object value) =>
                         {
-                            property.SetValue(receiver, value, new[] { key });
+                            property.SetValue(receiver, value, [key]);
                             return receiver;
                         }, setterParams));
                     }
@@ -156,11 +156,6 @@ namespace InterEx.Integration
 
             this._classCache.Add(type, info);
             return info;
-        }
-
-        public ReflectionCache(BindingType binding)
-        {
-            this.Binding = binding;
         }
     }
 }

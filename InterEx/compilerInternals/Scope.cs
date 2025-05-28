@@ -10,7 +10,7 @@ namespace InterEx.CompilerInternals
             this.Parent = parent;
         }
 
-        protected Dictionary<string, Variable> _variables = new();
+        protected Dictionary<string, Variable> _variables = [];
 
         public readonly Scope Parent = null;
         public bool IsGlobal => this.Parent == null;

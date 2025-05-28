@@ -7,14 +7,14 @@ using InterEx.InterfaceTypes;
 
 namespace InterEx.Integration
 {
-    public class DelegateAdapterProvider
+    public class DelegateAdapterProvider(ReflectionCache typeSource)
     {
         public delegate Delegate Adapter(IEFunction function);
 
         public record class DelegateAdapter(Adapter Adapt) { }
 
-        public readonly ReflectionCache ClassInfoProvider;
-        protected readonly Dictionary<Type, DelegateAdapter> _cache = new();
+        public readonly ReflectionCache ClassInfoProvider = typeSource;
+        protected readonly Dictionary<Type, DelegateAdapter> _cache = [];
 
         public bool IsDelegate(Type type) => type.IsAssignableTo(typeof(Delegate));
 
@@ -68,16 +68,11 @@ namespace InterEx.Integration
 
             var caller = Expression.Lambda(delegateType, call, delegateParams);
 
-            var adapter = Expression.Lambda(typeof(Adapter), caller, new[] { ieFunctionParam }).Compile();
+            var adapter = Expression.Lambda<Adapter>(caller, [ieFunctionParam]).Compile();
 
-            var info = new DelegateAdapter((Adapter)adapter);
+            var info = new DelegateAdapter(adapter);
             this._cache.Add(delegateType, info);
             return info;
-        }
-
-        public DelegateAdapterProvider(ReflectionCache typeSource)
-        {
-            this.ClassInfoProvider = typeSource;
         }
     }
 }

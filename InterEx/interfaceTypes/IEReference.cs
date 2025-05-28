@@ -10,18 +10,11 @@ namespace InterEx.InterfaceTypes
         public abstract void Set(Value value);
         public abstract void Set(object value);
 
-        public class ObjectProperty : IEReference
+        public class ObjectProperty(IEEngine engine, Value receiver, string property) : IEReference
         {
-            protected readonly IEEngine _engine;
-            protected readonly Value _receiver;
-            protected readonly string _property;
-
-            public ObjectProperty(IEEngine engine, Value receiver, string property)
-            {
-                this._engine = engine;
-                this._receiver = receiver;
-                this._property = property;
-            }
+            protected readonly IEEngine _engine = engine;
+            protected readonly Value _receiver = receiver;
+            protected readonly string _property = property;
 
             public override T Get<T>()
             {
@@ -44,16 +37,10 @@ namespace InterEx.InterfaceTypes
             }
         }
 
-        public class VariableReference : IEReference
+        public class VariableReference(IEEngine engine, Variable variable) : IEReference
         {
-            protected readonly IEEngine _engine;
-            protected readonly Variable _variable;
-
-            public VariableReference(IEEngine engine, Variable variable)
-            {
-                this._engine = engine;
-                this._variable = variable;
-            }
+            protected readonly IEEngine _engine = engine;
+            protected readonly Variable _variable = variable;
 
             public override T Get<T>()
             {

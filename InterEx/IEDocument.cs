@@ -8,10 +8,10 @@ using InterEx.CompilerInternals;
 
 namespace InterEx
 {
-    public partial class IEDocument
+    public partial class IEDocument(string path, Statement.Group root)
     {
-        public readonly string Path;
-        public readonly Statement.Group Root;
+        public readonly string Path = path;
+        public readonly Statement.Group Root = root;
 
         public string ToJson()
         {
@@ -91,12 +91,6 @@ namespace InterEx
             {
                 WriteIndented = true
             });
-        }
-
-        public IEDocument(string path, Statement.Group root)
-        {
-            this.Path = path;
-            this.Root = root;
         }
 
         public static IEDocument ParseCode(string path, string input)

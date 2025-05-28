@@ -10,18 +10,11 @@ namespace InterEx
 {
     public class ReflectionValueProvider : IValueProvider, IValueExporter
     {
-        public class EntityInfo : ICustomValue
+        public class EntityInfo(ReflectionValueProvider owner, string name) : ICustomValue
         {
-            public String Name;
-            public ReflectionValueProvider Owner;
-
-            public EntityInfo(ReflectionValueProvider owner, string name)
-            {
-                this.Name = name;
-                this.Owner = owner;
-            }
-
-            public readonly Dictionary<string, EntityInfo> Members = new();
+            public String Name = name;
+            public ReflectionValueProvider Owner = owner;
+            public readonly Dictionary<string, EntityInfo> Members = [];
 
             public Type Class = null;
             public List<ReflectionCache.FunctionInfo> Generics = null;
@@ -34,7 +27,7 @@ namespace InterEx
                 var name = this.Name;
                 var owner = this.Owner;
 
-                this.Generics ??= new();
+                this.Generics ??= [];
                 this.Generics.Add(new((ReflectionCache.VariadicFunction)((arguments) =>
                 {
                     var typeArguments = arguments.Cast<Type>().ToArray();
@@ -108,7 +101,7 @@ namespace InterEx
                 if (this.Class != null)
                 {
                     var info = this.Owner.Integration.StaticCache.GetClassInfo(this.Class);
-                    info.Functions.TryGetValue(name, out overloads);
+                    info.Functions.TryGetValue("", out overloads);
                 }
 
                 if (this.Generics != null)
@@ -161,7 +154,7 @@ namespace InterEx
         {
             var result = this.Global;
             var segments = path
-                .Split(new[] { '.', '+' })
+                .Split(['.', '+'])
                 .Select(v => v.Split('`')[0]);
 
             foreach (var segment in segments)

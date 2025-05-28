@@ -49,7 +49,7 @@ namespace InterEx.Integration
         public static Value k_Then(Statement predicateStmt, IEEngine engine, Statement exprStmt, Scope scope)
         {
             var predicate = engine.Evaluate(predicateStmt, scope);
-            var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<Value>());
+            var predicateBool = engine.Invoke(predicate, null, "bool", []);
             var predicateValue = engine.Integration.ExportValue<bool>(predicateBool);
 
             if (predicateValue)
@@ -66,7 +66,7 @@ namespace InterEx.Integration
         public static Value k_Else(Statement predicateStmt, IEEngine engine, Statement exprStmt, Scope scope)
         {
             var predicate = engine.Evaluate(predicateStmt, scope);
-            var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<Value>());
+            var predicateBool = engine.Invoke(predicate, null, "bool", []);
             var predicateValue = engine.Integration.ExportValue<bool>(predicateBool);
 
             if (!predicateValue)
@@ -87,7 +87,7 @@ namespace InterEx.Integration
             while (true)
             {
                 var predicate = engine.Evaluate(predicateStmt, scope);
-                var predicateBool = engine.Invoke(predicate, null, "bool", Array.Empty<Value>());
+                var predicateBool = engine.Invoke(predicate, null, "bool", []);
                 var predicateValue = engine.Integration.ExportValue<bool>(predicateBool);
                 if (!predicateValue) break;
 

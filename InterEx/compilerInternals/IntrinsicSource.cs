@@ -104,26 +104,26 @@ namespace InterEx.CompilerInternals
                         var genericParameters = dictionaryInterface.GetGenericArguments();
                         var keyType = genericParameters[0];
                         var valueType = genericParameters[1];
-                        var keysResultType = IntrinsicSource.ListResultType.MakeGenericType(new[] { keyType });
-                        var keysResultCtor = keysResultType.GetConstructor(Array.Empty<Type>());
-                        var valuesResultType = IntrinsicSource.ListResultType.MakeGenericType(new[] { valueType });
-                        var valuesResultCtor = valuesResultType.GetConstructor(Array.Empty<Type>());
+                        var keysResultType = IntrinsicSource.ListResultType.MakeGenericType([keyType]);
+                        var keysResultCtor = keysResultType.GetConstructor([]);
+                        var valuesResultType = IntrinsicSource.ListResultType.MakeGenericType([valueType]);
+                        var valuesResultCtor = valuesResultType.GetConstructor([]);
 
                         info.AddFunction("keys", new((IDictionary receiver) =>
                         {
                             var keys = receiver.Keys;
-                            var result = (IList)keysResultCtor.Invoke(Array.Empty<object>());
+                            var result = (IList)keysResultCtor.Invoke([]);
                             foreach (var key in keys) result.Add(key);
                             return result;
-                        }, Array.Empty<Type>()));
+                        }, []));
 
                         info.AddFunction("values", new((IDictionary receiver) =>
                         {
                             var values = receiver.Values;
-                            var result = (IList)valuesResultCtor.Invoke(Array.Empty<object>());
+                            var result = (IList)valuesResultCtor.Invoke([]);
                             foreach (var value in values) result.Add(value);
                             return result;
-                        }, Array.Empty<Type>()));
+                        }, []));
 
                         info.AddFunction("init", new((IDictionary receiver, Dictionary<string, Value> literal) =>
                         {
@@ -133,7 +133,7 @@ namespace InterEx.CompilerInternals
                             }
 
                             return receiver;
-                        }, new[] { typeof(Dictionary<string, Value>) }));
+                        }, [typeof(Dictionary<string, Value>)]));
 
                         return;
                     }
@@ -195,7 +195,7 @@ namespace InterEx.CompilerInternals
                     }
 
                     return receiver;
-                }, new[] { typeof(Dictionary<string, Value>), typeof(CallContext) }));
+                }, [typeof(Dictionary<string, Value>), typeof(CallContext)]));
             });
         }
 

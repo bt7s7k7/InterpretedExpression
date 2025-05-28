@@ -243,7 +243,7 @@ namespace InterEx
                     {
                         arguments = new[] { new Value(this) }
                             .Concat(invocation.Arguments.Select(v => new Value(v)))
-                            .Concat(new[] { new Value(scope) })
+                            .Concat([new Value(scope)])
                             .ToArray();
                     }
                     else

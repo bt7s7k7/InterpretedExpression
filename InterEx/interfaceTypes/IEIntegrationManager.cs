@@ -23,21 +23,21 @@ namespace InterEx.InterfaceTypes
         }
 
         public ReadOnlyCollection<IValueImporter> Importers => this._importers.AsReadOnly();
-        protected readonly List<IValueImporter> _importers = new();
+        protected readonly List<IValueImporter> _importers = [];
         public void AddImporter(IValueImporter importer) => this._importers.Add(importer);
 
         public ReadOnlyCollection<IValueExporter> Exporters => this._exporters.AsReadOnly();
-        protected readonly List<IValueExporter> _exporters = new();
+        protected readonly List<IValueExporter> _exporters = [];
         public void AddExporter(IValueExporter exporter) => this._exporters.Add(exporter);
         public ReadOnlyCollection<IValueExporter> ExportersFallback => this._exportersFallback.AsReadOnly();
-        protected readonly List<IValueExporter> _exportersFallback = new();
+        protected readonly List<IValueExporter> _exportersFallback = [];
         public void AddExporterFallback(IValueExporter exporter) => this._exportersFallback.Add(exporter);
 
         public ReadOnlyCollection<IValueProvider> Providers => this._providers.AsReadOnly();
-        protected readonly List<IValueProvider> _providers = new();
+        protected readonly List<IValueProvider> _providers = [];
         public void AddProvider(IValueProvider provider) => this._providers.Add(provider);
         public ReadOnlyCollection<IValueProvider> ProvidersFallback => this._providersFallback.AsReadOnly();
-        protected readonly List<IValueProvider> _providersFallback = new();
+        protected readonly List<IValueProvider> _providersFallback = [];
         public void AddProviderFallback(IValueProvider provider) => this._providersFallback.Add(provider);
 
         public bool FindValue(Scope scope, string name, out Value value)
