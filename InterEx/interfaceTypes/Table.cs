@@ -1,10 +1,12 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using InterEx.CompilerInternals;
 using InterEx.Integration;
-using InterEx.InterfaceTypes;
 
-namespace InterEx.Declaration;
+namespace InterEx.InterfaceTypes;
 
 public class Table : ICustomValue
 {

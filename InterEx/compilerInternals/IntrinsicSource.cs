@@ -193,6 +193,21 @@ namespace InterEx.CompilerInternals
             });
         }
 
+        private class TableConstructor
+        {
+            public Table Invoke() => new Table();
+
+            public Table Invoke(Dictionary<string, Value> values)
+            {
+                var result = new Table();
+                foreach (var (key, value) in values)
+                {
+                    result.DeclareProperty(key, value);
+                }
+                return result;
+            }
+        }
+
         public static void InitializeIntrinsics(IEEngine engine)
         {
             engine.AddGlobal("true", true);
@@ -200,6 +215,8 @@ namespace InterEx.CompilerInternals
             engine.AddGlobal("null", null);
             engine.AddGlobal("GLOBAL", engine.GlobalScope);
             engine.AddGlobal("ENGINE", engine);
+
+            engine.AddGlobal("new", new TableConstructor());
 
             engine.AddGlobal("k_Ref", (IEEngine engine, Statement value, Scope scope) =>
             {

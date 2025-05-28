@@ -1,7 +1,7 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
-using InterEx.InterfaceTypes;
 
-namespace InterEx.Declaration;
+namespace InterEx.InterfaceTypes;
 
 public struct PropertyDescriptor(Value value)
 {

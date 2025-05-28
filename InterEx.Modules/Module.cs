@@ -1,5 +1,4 @@
 using InterEx.CompilerInternals;
-using InterEx.Declaration;
 using InterEx.InterfaceTypes;
 
 namespace InterEx.Modules;
