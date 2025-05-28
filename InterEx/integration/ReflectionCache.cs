@@ -80,6 +80,11 @@ namespace InterEx.Integration
 
             if (this.Binding == BindingType.Static)
             {
+                if (type.IsInterface)
+                {
+                    info.AddFunction("", new FunctionInfo((object value) => value, [type]));
+                }
+
                 foreach (var constructor in type.GetConstructors())
                 {
                     info.AddFunction("", new FunctionInfo(constructor));

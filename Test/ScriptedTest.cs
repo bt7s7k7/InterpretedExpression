@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using InterEx;
+using InterEx.CompilerInternals;
 using InterEx.Integration;
 using InterEx.InterfaceTypes;
 using InterEx.Modules;
@@ -11,10 +12,10 @@ public class ScriptedTest
     public IEEngine Engine;
     public ImportLib ImportLib;
 
-    public Value Run(string code, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
+    public Value Run(string code, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0, Scope scope = null)
     {
         var document = IEDocument.ParseCode(file, new String('\n', line) + code);
-        return this.Engine.Evaluate(document.Root, this.Engine.PrepareCall());
+        return this.Engine.Evaluate(document.Root, scope ?? this.Engine.PrepareCall());
     }
 
     public Module RunModule(string code, [CallerFilePath] string file = null)

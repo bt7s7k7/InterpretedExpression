@@ -61,6 +61,12 @@ namespace InterEx.CompilerInternals
                 }
             }
 
+            if (type.IsInterface && value.Content is Table implementer)
+            {
+                data = ScriptedProxy.Create(integration, implementer, type);
+                return true;
+            }
+
             data = default;
             return false;
         }

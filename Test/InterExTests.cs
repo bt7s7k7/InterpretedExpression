@@ -241,4 +241,47 @@ public class InterExTests
             ), null)
         """);
     }
+
+    [Test]
+    public void ScriptedInterface()
+    {
+        var runner = new ScriptedTest();
+        var scope = runner.Engine.PrepareCall();
+        var resultValue = runner.Run("""
+            $value = 0
+            $impl = new({
+                get_Number: ^value
+                set_Number: ^(v) value = v
+                Get1: ^1
+                Invoke2: ^(callback) callback()
+            })
+
+            impl
+        """, scope: scope);
+
+        var result = runner.Engine.Integration.ExportValue<ITargetInterface>(resultValue);
+
+        Assert.That(result.Get1(), Is.EqualTo(1));
+
+        Assert.Throws<NotImplementedException>(() =>
+        {
+            result.Get2();
+        });
+
+        result.Invoke1();
+
+        var executed = false;
+        result.Invoke2(() => { executed = true; });
+        Assert.That(executed, Is.True);
+
+        Assert.That(result.Number, Is.EqualTo(0));
+        result.Number = 1;
+        Assert.That(result.Number, Is.EqualTo(1));
+
+        Assert.That(result.DefaultValue, Is.EqualTo(10));
+
+        runner.Run("""
+            AssertEqual(ITargetInterface(impl).Number, 1)
+        """, scope: scope);
+    }
 }

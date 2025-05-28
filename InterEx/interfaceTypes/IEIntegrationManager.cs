@@ -77,6 +77,7 @@ namespace InterEx.InterfaceTypes
         public object ExportValue(Value value, Type type)
         {
             if (type == typeof(Value)) return value;
+            if (type == typeof(void)) return null;
 
             if (value.Content != null && value.Content.GetType().IsAssignableTo(type))
             {
