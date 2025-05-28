@@ -42,7 +42,7 @@
                 },
                 {
                     "name": "constant.language.inter-ex",
-                    "match": "\\b(null|true|false|init)\\b"
+                    "match": "\\b(null|true|false|init|new)\\b"
                 }
             ]
         },
@@ -163,7 +163,7 @@
             "patterns": [
                 {
                     "name": "meta.function.inter-ex",
-                    "begin": "(\\^)",
+                    "begin": "(\\^)(?=(?:\\(.*?\\))?\\s*?\\{)",
                     "beginCaptures": {
                         "1": {
                             "name": "storage.type.function.inter-ex"
@@ -176,7 +176,7 @@
                             "end": "\\)",
                             "patterns": [
                                 {
-                                    "name": "variable.parameter",
+                                    "name": "variable.parameter.inter-ex",
                                     "match": "[a-zA-Z_]\\w*"
                                 }
                             ]
@@ -191,6 +191,32 @@
                             ]
                         }
                     ]
+                },
+                {
+                    "name": "meta.function.inter-ex",
+                    "begin": "(\\^)(?=\\))",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "storage.type.function.inter-ex"
+                        }
+                    },
+                    "end": ")",
+                    "patterns": [
+                        {
+                            "begin": "\\(",
+                            "end": "(?=\\))",
+                            "patterns": [
+                                {
+                                    "name": "variable.parameter.inter-ex",
+                                    "match": "[a-zA-Z_]\\w*"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "storage.type.function.inter-ex",
+                    "match": "\\^"
                 },
                 {
                     "name": "meta.objectliteral.inter-ex",
@@ -221,6 +247,10 @@
         },
         "variables": {
             "patterns": [
+                {
+                    "name": "entity.name.type.interface.inter-ex",
+                    "match": "(?<!\\.)I[\\w]+"
+                },
                 {
                     "name": "support.class.inter-ex",
                     "match": "(?<!\\.)[A-Z][\\w]+"

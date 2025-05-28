@@ -467,8 +467,15 @@ namespace InterEx
 
                     skipWhitespace();
 
-                    if (!consume("{")) throw new IEParsingException(formatException("Expected function body", index));
-                    var body = parseBlock("}");
+                    List<Statement> body;
+                    if (consume("{"))
+                    {
+                        body = parseBlock("}");
+                    }
+                    else
+                    {
+                        body = [parseExpression()];
+                    }
 
                     return new Statement.FunctionDeclaration(new IEPosition(path, input, start), parameters, body);
                 }

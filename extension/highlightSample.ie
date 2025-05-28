@@ -1,0 +1,74 @@
+k_Using(System)
+
+$i = 0
+$len = 10
+
+i.lt(len).k_While((
+    Console.WriteLine(i)
+    i = i.add(1)
+))
+
+k_Using(System)
+
+$main = ^(a) {
+    $i = 0
+    $len = a
+
+    i.lt(len).k_While((
+        Console.WriteLine(i)
+        i = i.add(1)
+    ))
+}
+
+main(10)
+
+k_Using(System)
+k_Using(System.Text)
+k_Using(System.Collections.Generic)
+
+$list = List(String)().init("a", "b", "c")
+
+Console.WriteLine(String.Join(", ", list))
+
+$dictionary = Dictionary(String, Int32)().init({ q: 5, a: 10, z: 21 })
+
+dictionary.forEach(^(kv) {
+    Console.WriteLine(StringBuilder()
+        .Append(kv.Key)
+        .Append(": ")
+        .Append(kv.Value)
+    )
+})
+
+k_Using(System)
+
+$test = TestClass()
+
+test.Action2 = ^(string, double) {
+    Console.WriteLine(string)
+    Console.WriteLine(double)
+}
+
+test.Action2.Invoke("a", 5)
+
+test.Func1 = ^(a) { a.add(1) }
+
+test.Func1.Invoke(1)
+
+k_Using(System)
+
+$func = ^{
+    test()
+    var = ^{
+        hello
+    }
+}
+
+a = { a, b, c: 58, fff}
+
+list.Add(new({
+    get_Label: ^"NoclipSwitch",
+    Init: ^(stack) {
+        GD.Print("Ready")
+    }
+}))
