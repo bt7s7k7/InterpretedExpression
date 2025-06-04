@@ -6,7 +6,7 @@ var engine = new IEEngine();
 
 var path = "../example/sample.ie";
 
-ReflectionValueProvider.CreateAndRegister(engine.Integration).AddAllAssemblies();
+engine.Integration.EntityProvider.LoadAllAssemblies();
 
 var argv = Environment.GetCommandLineArgs();
 Console.WriteLine(String.Join(", ", argv));

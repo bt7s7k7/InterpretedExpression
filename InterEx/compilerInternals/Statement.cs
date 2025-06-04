@@ -24,7 +24,7 @@ namespace InterEx.CompilerInternals
             public record class DispatchCache(
                 Type ReceiverType,
                 Type[] Parameters,
-                ReflectionCache.FunctionInfo Target
+                TypeRegistry.FunctionInfo Target
             );
 
             public int DeoptimizeCounter = 0;

@@ -1,18 +1,23 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using InterEx.CompilerInternals;
-using InterEx.Integration;
 using InterEx.InterfaceTypes;
 
-namespace InterEx
+namespace InterEx.Integration
 {
-    public class ReflectionValueProvider : IValueProvider, IValueExporter
+    public class TypeRegistry(TypeRegistry.BindingType binding)
     {
-        public class MethodGroup(List<ReflectionCache.FunctionInfo> functions) : ICustomValue
+        public enum BindingType { Static, Instance }
+        public BindingType Binding = binding;
+
+        public delegate object VariadicFunction(object[] arguments);
+
+        public class MethodGroup(List<FunctionInfo> functions) : ICustomValue
         {
-            public readonly List<ReflectionCache.FunctionInfo> Functions = functions;
+            public readonly List<FunctionInfo> Functions = functions;
 
             public bool Get(IEEngine engine, string name, out Value value)
             {
@@ -43,14 +48,14 @@ namespace InterEx
             }
         }
 
-        public class EntityInfo(ReflectionValueProvider owner, string name) : ICustomValue
+        public class EntityInfo(EntityProvider owner, string name) : ICustomValue
         {
             public String Name = name;
-            public ReflectionValueProvider Owner = owner;
+            public EntityProvider Owner = owner;
             public readonly Dictionary<string, EntityInfo> Members = [];
 
             public Type Class = null;
-            public List<ReflectionCache.FunctionInfo> Generics = null;
+            public List<FunctionInfo> Generics = null;
 
             public void AddGeneric(Type type)
             {
@@ -61,7 +66,7 @@ namespace InterEx
                 var owner = this.Owner;
 
                 this.Generics ??= [];
-                this.Generics.Add(new((ReflectionCache.VariadicFunction)((arguments) =>
+                this.Generics.Add(new((VariadicFunction)((arguments) =>
                 {
                     var typeArguments = arguments.Cast<Type>().ToArray();
                     var cacheKey = $"<{String.Join(", ", (IEnumerable<Type>)typeArguments)}>";
@@ -135,7 +140,7 @@ namespace InterEx
                     return true;
                 }
 
-                List<ReflectionCache.FunctionInfo> overloads = null;
+                List<FunctionInfo> overloads = null;
 
                 if (this.Class != null)
                 {
@@ -189,159 +194,149 @@ namespace InterEx
             }
         }
 
-        protected EntityInfo GetEntity(string path)
+        public record class FunctionInfo
         {
-            var result = this.Global;
-            var segments = path
-                .Split(['.', '+'])
-                .Select(v => v.Split('`')[0]);
+            public readonly object Target;
+            public readonly Type[] Parameters;
 
-            foreach (var segment in segments)
+            public FunctionInfo(MethodInfo method)
             {
-                result = result.GetMember(segment);
+                this.Target = method;
+                this.Parameters = method.GetParameters().Select(v => v.ParameterType).ToArray();
             }
 
-            return result;
-        }
-
-        public EntityInfo AddClass(Type type, string overridePath = null)
-        {
-            var path = overridePath ?? type.FullName;
-            var entity = this.GetEntity(path);
-
-            if (type.IsGenericTypeDefinition)
+            public FunctionInfo(ConstructorInfo method)
             {
-                entity.AddGeneric(type);
-            }
-            else
-            {
-                entity.Class = type;
+                this.Target = method;
+                this.Parameters = method.GetParameters().Select(v => v.ParameterType).ToArray();
             }
 
-            return entity;
-        }
-
-        public ReflectionValueProvider AddAssembly(Assembly assembly)
-        {
-            foreach (var type in assembly.GetTypes())
+            public FunctionInfo(VariadicFunction target, Type[] parameters)
             {
-                this.AddClass(type);
+                this.Target = target;
+                this.Parameters = parameters;
             }
 
-            return this;
-        }
-
-        public ReflectionValueProvider AddAllAssemblies()
-        {
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            public FunctionInfo(Delegate target, Type[] parameters)
             {
-                this.AddAssembly(assembly);
+                this.Target = target;
+                this.Parameters = parameters;
             }
-            return this;
         }
 
-        public readonly EntityInfo Global;
-        public readonly IEIntegrationManager Integration;
-
-        protected ReflectionValueProvider(IEIntegrationManager integration)
+        public class ClassInfo
         {
-            this.Global = new EntityInfo(this, "");
-            this.Integration = integration;
-        }
+            public readonly Dictionary<string, List<FunctionInfo>> Functions = [];
 
-        public static ReflectionValueProvider CreateAndRegister(IEIntegrationManager integration)
-        {
-            if (integration.Providers.FirstOrDefault(v => v is ReflectionValueProvider, null) is ReflectionValueProvider existing)
+            public void AddFunction(string name, FunctionInfo method)
             {
-                return existing;
+                if (this.Functions.TryGetValue(name, out var list)) list.Add(method);
+                else this.Functions.Add(name, [method]);
             }
 
-            var provider = new ReflectionValueProvider(integration);
-
-            integration.AddExporter(provider);
-            integration.AddProvider(provider);
-
-            return provider;
+            public readonly Dictionary<string, MemberInfo> Properties = [];
         }
 
-        public static void ImportFromNamespace(EntityInfo entity, Scope scope)
+        public delegate void ClassPatcher(TypeRegistry owner, Type type, ClassInfo info);
+        protected List<ClassPatcher> _patchers = [];
+        public void AddPatcher(ClassPatcher patcher)
         {
-            var usings = _GetUsingsInScope(scope, allowCreate: true);
-            if (usings.Contains(entity)) return;
-            usings.Add(entity);
+            this._patchers.Add(patcher);
         }
 
-        private static void _UsingStatement(IEEngine engine, Statement target, Scope scope)
+        protected Dictionary<Type, ClassInfo> _classCache = [];
+        public ClassInfo GetClassInfo(Type type)
         {
-            var targetValue = engine.Evaluate(target, scope);
-            var entity = engine.Integration.ExportValue<EntityInfo>(targetValue);
-            ImportFromNamespace(entity, scope);
-        }
+            if (this._classCache.TryGetValue(type, out var existing)) return existing;
 
-        private static List<EntityInfo> _defaultList = null;
-        private static List<EntityInfo> _GetUsingsInScope(Scope scope, bool allowCreate)
-        {
-            const string USINGS_KEY = "<rvp.usings>";
+            var info = new ClassInfo();
 
-            if (scope.TryGetOwn(USINGS_KEY, out var usingsVariable))
+            var flags = BindingFlags.Public | BindingFlags.FlattenHierarchy | (this.Binding == BindingType.Static ? BindingFlags.Static : BindingFlags.Instance);
+
+            foreach (var method in type.GetMethods(flags))
             {
-                return (List<EntityInfo>)usingsVariable.Content.Content;
+                if (method.ContainsGenericParameters) continue;
+                info.AddFunction(method.Name, new FunctionInfo(method));
             }
 
-            if (!allowCreate) return _defaultList ??= [];
-
-            var usings = new List<EntityInfo>();
-            scope.Declare(USINGS_KEY).Content = new Value(usings);
-            return usings;
-        }
-
-        bool IValueProvider.Find(IEIntegrationManager _, Scope scope, string name, out Value value)
-        {
-            var entity = (EntityInfo)null;
-
-            if (scope.TryGetOwn("<rvp.usings>", out var usingsVariable))
+            if (this.Binding == BindingType.Static)
             {
-                foreach (var usingNamespace in _GetUsingsInScope(scope, allowCreate: false))
+                if (type.IsInterface)
                 {
-                    if (usingNamespace.Members.TryGetValue(name, out entity))
+                    info.AddFunction("", new FunctionInfo((object value) => value, [type]));
+                }
+
+                foreach (var constructor in type.GetConstructors())
+                {
+                    info.AddFunction("", new FunctionInfo(constructor));
+                }
+            }
+
+            foreach (var property in type.GetProperties(flags))
+            {
+                var indexParameters = property.GetIndexParameters();
+                if (indexParameters.Length == 1)
+                {
+                    var getterParams = indexParameters.Select(v => v.ParameterType).ToArray();
+                    var setterParams = getterParams.Concat([property.PropertyType]).ToArray();
+
+                    if (type.IsAssignableTo(typeof(IDictionary)))
                     {
-                        value = new Value(entity);
-                        return true;
+                        info.AddFunction("at", new((IDictionary receiver, object key) =>
+                        {
+                            return receiver[key];
+                        }, getterParams));
+
+                        info.AddFunction("at", new((IDictionary receiver, object key, object value) =>
+                        {
+                            receiver[key] = value;
+                            return receiver;
+                        }, setterParams));
                     }
+                    else if (type.IsAssignableTo(typeof(IList)))
+                    {
+                        info.AddFunction("at", new((IList receiver, int key) =>
+                        {
+                            return receiver[key];
+                        }, getterParams));
+
+                        info.AddFunction("at", new((IList receiver, int key, object value) =>
+                        {
+                            receiver[key] = value;
+                            return receiver;
+                        }, setterParams));
+                    }
+                    else
+                    {
+                        info.AddFunction("at", new((object receiver, object key) =>
+                        {
+                            return property.GetValue(receiver, [key]);
+                        }, getterParams));
+
+                        info.AddFunction("at", new((object receiver, object key, object value) =>
+                        {
+                            property.SetValue(receiver, value, [key]);
+                            return receiver;
+                        }, setterParams));
+                    }
+
+                    continue;
                 }
+                info.Properties.Add(property.Name, property);
             }
 
-            if (scope.IsGlobal)
+            foreach (var field in type.GetFields(flags))
             {
-                if (name == "k_Using")
-                {
-                    var action = _UsingStatement;
-                    value = new Value(action);
-                    return true;
-                }
-
-                if (this.Global.Members.TryGetValue(name, out entity))
-                {
-
-                    value = new Value(entity);
-                    return true;
-                }
+                info.Properties.Add(field.Name, field);
             }
 
-            value = default;
-            return false;
-        }
-
-        bool IValueExporter.Export(IEIntegrationManager _, Value value, Type type, out object data)
-        {
-            if (type == typeof(Type) && value.Content is EntityInfo entityInfo && entityInfo.Class != null)
+            foreach (var patcher in this._patchers)
             {
-                data = entityInfo.Class;
-                return true;
+                patcher(this, type, info);
             }
 
-            data = null;
-            return false;
+            this._classCache.Add(type, info);
+            return info;
         }
     }
 }

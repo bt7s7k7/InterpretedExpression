@@ -67,6 +67,12 @@ namespace InterEx.CompilerInternals
                 return true;
             }
 
+            if (type == typeof(Type) && value.Content is TypeRegistry.EntityInfo entityInfo && entityInfo.Class != null)
+            {
+                data = entityInfo.Class;
+                return true;
+            }
+
             data = default;
             return false;
         }
@@ -147,7 +153,7 @@ namespace InterEx.CompilerInternals
                         var genericParameters = listInterface.GetGenericArguments();
                         var valueType = genericParameters[0];
 
-                        info.AddFunction("init", new((ReflectionCache.VariadicFunction)((arguments) =>
+                        info.AddFunction("init", new((TypeRegistry.VariadicFunction)((arguments) =>
                         {
                             var receiver = (IList)arguments[0];
 
@@ -171,7 +177,7 @@ namespace InterEx.CompilerInternals
                         var valueType = addMethod.Parameters[0];
                         var addMethodInfo = (MethodInfo)addMethod.Target;
 
-                        info.AddFunction("init", new((ReflectionCache.VariadicFunction)((arguments) =>
+                        info.AddFunction("init", new((TypeRegistry.VariadicFunction)((arguments) =>
                         {
                             var receiver = arguments[0];
 
@@ -245,7 +251,7 @@ namespace InterEx.CompilerInternals
                 else throw new IERuntimeException("Can only get reference to a variable or object property");
             });
 
-            engine.AddGlobal("k_Switch", (ReflectionCache.VariadicFunction)((argumentValues) =>
+            engine.AddGlobal("k_Switch", (TypeRegistry.VariadicFunction)((argumentValues) =>
             {
                 var arguments = argumentValues[1..].Select(v => ((Value)v).Content).ToArray();
 
@@ -280,7 +286,7 @@ namespace InterEx.CompilerInternals
                 return default;
             }));
 
-            engine.AddGlobal("k_If", (ReflectionCache.VariadicFunction)((argumentValues) =>
+            engine.AddGlobal("k_If", (TypeRegistry.VariadicFunction)((argumentValues) =>
             {
                 var arguments = argumentValues[1..].Select(v => ((Value)v).Content).ToArray();
 

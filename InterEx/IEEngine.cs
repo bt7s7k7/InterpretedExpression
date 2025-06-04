@@ -94,9 +94,9 @@ namespace InterEx
                 return this.Invoke(getterResult, invocation, "Invoke", arguments);
             }
 
-            if (receiver.Content is ReflectionCache.VariadicFunction variadicFunction)
+            if (receiver.Content is TypeRegistry.VariadicFunction variadicFunction)
             {
-                return this.BridgeMethodCall([new ReflectionCache.FunctionInfo(variadicFunction, null)], invocation, receiver, arguments);
+                return this.BridgeMethodCall([new TypeRegistry.FunctionInfo(variadicFunction, null)], invocation, receiver, arguments);
             }
 
             var type = receiver.Content?.GetType();
@@ -321,7 +321,7 @@ namespace InterEx
             }
         }
 
-        public object ExecuteMethodCall(ReflectionCache.FunctionInfo function, Value receiver, Value[] arguments)
+        public object ExecuteMethodCall(TypeRegistry.FunctionInfo function, Value receiver, Value[] arguments)
         {
             var result = (object)null;
 
@@ -338,7 +338,7 @@ namespace InterEx
                 var exportedArguments = this.Integration.ExportArguments(arguments, function.Parameters, context);
                 result = constructor.Invoke(exportedArguments);
             }
-            else if (target is ReflectionCache.VariadicFunction variadic)
+            else if (target is TypeRegistry.VariadicFunction variadic)
             {
                 var exportedArguments = this.Integration.ExportArguments(arguments, function.Parameters, context);
                 if (receiver.Content != null) exportedArguments = new[] { receiver.Content }.Concat(exportedArguments).ToArray();
@@ -355,7 +355,7 @@ namespace InterEx
             return result;
         }
 
-        public Value BridgeMethodCall(List<ReflectionCache.FunctionInfo> overloads, Statement.Invocation invocation, Value receiver, Value[] arguments)
+        public Value BridgeMethodCall(List<TypeRegistry.FunctionInfo> overloads, Statement.Invocation invocation, Value receiver, Value[] arguments)
         {
             if (invocation != null && invocation.CachedCall != null)
             {

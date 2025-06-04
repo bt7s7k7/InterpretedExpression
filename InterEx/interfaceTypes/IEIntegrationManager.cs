@@ -9,17 +9,21 @@ namespace InterEx.InterfaceTypes
 {
     public class IEIntegrationManager
     {
-        public readonly ReflectionCache InstanceCache;
-        public readonly ReflectionCache StaticCache;
+        public readonly TypeRegistry InstanceCache;
+        public readonly TypeRegistry StaticCache;
         public readonly DelegateAdapterProvider Delegates;
+        public readonly EntityProvider EntityProvider;
 
         public IEIntegrationManager()
         {
-            this.InstanceCache = new ReflectionCache(ReflectionCache.BindingType.Instance);
-            this.StaticCache = new ReflectionCache(ReflectionCache.BindingType.Static);
+            this.InstanceCache = new TypeRegistry(TypeRegistry.BindingType.Instance);
+            this.StaticCache = new TypeRegistry(TypeRegistry.BindingType.Static);
             this.Delegates = new DelegateAdapterProvider(this.InstanceCache);
+            this.EntityProvider = new EntityProvider(this);
 
             IntrinsicSource.InitializeIntegration(this);
+
+            this.AddProvider(this.EntityProvider);
         }
 
         public ReadOnlyCollection<IValueImporter> Importers => this._importers.AsReadOnly();

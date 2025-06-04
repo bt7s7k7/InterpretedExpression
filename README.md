@@ -51,7 +51,7 @@ Currently the best way to install this library is to copy its source files in th
 
 ```cs
 var engine = new IEEngine();
-ReflectionValueProvider.CreateAndRegister(engine.Integration).AddAllAssemblies();
+engine.Integration.EntityProvider.LoadAllAssemblies();
 
 try
 {
@@ -131,7 +131,7 @@ i.lt(len).k_While((
 
 ## C# Interop
 
-InterEx can perform all operations on any provided C# object. In addition the built-in `ReflectionValueProvider` module allows you to import C# namespaces and use their classes directly.
+InterEx can perform all operations on any provided C# object. Executing the `EntityProvider.LoadAllAssemblies()` method allows you to import C# namespaces and use their classes directly.
 
 InterEx is a dynamic language. That means the types of variables and function calls is only checked at runtime. To make this more simple for a user, InterEx uses simpler internal values which are then converted into C# types on use. For example instead of all C#'s number types, InterEx just has a single number type representing a double.
 

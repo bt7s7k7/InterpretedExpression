@@ -7,13 +7,13 @@ using InterEx.InterfaceTypes;
 
 namespace InterEx.Integration
 {
-    public class DelegateAdapterProvider(ReflectionCache typeSource)
+    public class DelegateAdapterProvider(TypeRegistry typeSource)
     {
         public delegate Delegate Adapter(IEFunction function);
 
         public record class DelegateAdapter(Adapter Adapt) { }
 
-        public readonly ReflectionCache ClassInfoProvider = typeSource;
+        public readonly TypeRegistry ClassInfoProvider = typeSource;
         protected readonly Dictionary<Type, DelegateAdapter> _cache = [];
 
         public bool IsDelegate(Type type) => type.IsAssignableTo(typeof(Delegate));
