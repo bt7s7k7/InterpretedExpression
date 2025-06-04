@@ -88,7 +88,7 @@ namespace InterEx.InterfaceTypes
                 return value.Content;
             }
 
-            if (value.Content == null && type.IsClass)
+            if (value.Content == null && (type.IsClass || type.IsInterface))
             {
                 return null;
             }
@@ -108,7 +108,7 @@ namespace InterEx.InterfaceTypes
                 if (exporter.Export(this, value, type, out var data)) return data;
             }
 
-            throw new IERuntimeException("Cannot convert value " + value.Content?.GetType().FullName + " into " + type.FullName);
+            throw new IERuntimeException("Cannot convert value " + (value.Content?.GetType().FullName ?? "null") + " into " + type.FullName);
         }
 
         public T ExportValue<T>(Value value)
