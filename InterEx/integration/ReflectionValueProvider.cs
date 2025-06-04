@@ -10,6 +10,39 @@ namespace InterEx
 {
     public class ReflectionValueProvider : IValueProvider, IValueExporter
     {
+        public class MethodGroup(List<ReflectionCache.FunctionInfo> functions) : ICustomValue
+        {
+            public readonly List<ReflectionCache.FunctionInfo> Functions = functions;
+
+            public bool Get(IEEngine engine, string name, out Value value)
+            {
+                if (name == "Functions")
+                {
+                    value = engine.Integration.ImportValue(this.Functions);
+                    return true;
+                }
+                value = default;
+                return false;
+            }
+
+            public bool Invoke(IEEngine engine, Statement.Invocation invocation, string name, out Value result, Value[] arguments)
+            {
+                if (name != "")
+                {
+                    result = default;
+                    return false;
+                }
+
+                result = engine.BridgeMethodCall(this.Functions, invocation, default, arguments);
+                return true;
+            }
+
+            public bool Set(IEEngine engine, string name, Value value)
+            {
+                return false;
+            }
+        }
+
         public class EntityInfo(ReflectionValueProvider owner, string name) : ICustomValue
         {
             public String Name = name;
@@ -73,6 +106,12 @@ namespace InterEx
                             return true;
                         }
                         else throw new();
+                    }
+
+                    if (info.Functions.TryGetValue(name, out var functions))
+                    {
+                        value = engine.Integration.ImportValue(new MethodGroup(functions));
+                        return true;
                     }
                 }
 

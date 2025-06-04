@@ -12,4 +12,7 @@ public class TestClass
     public string String = "hello";
 
     public StateType State = StateType.Normal;
+
+    public static string GetString(string value) => value;
+    public static string GetString() => "default";
 }

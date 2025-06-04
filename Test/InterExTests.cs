@@ -284,4 +284,17 @@ public class InterExTests
             AssertEqual(ITargetInterface(impl).Number, 1)
         """, scope: scope);
     }
+
+    [Test]
+    public void MethodGroup()
+    {
+        var tester = new ScriptedTest();
+
+        tester.Run("""
+            $method = TestClass.GetString
+
+            AssertEqual(method("foo"), "foo")
+            AssertEqual(method(), "default")
+        """);
+    }
 }
