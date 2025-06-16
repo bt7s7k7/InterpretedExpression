@@ -15,7 +15,9 @@ namespace InterEx.CompilerInternals
         public sealed record class Assignment(IEPosition Position, Statement Receiver, Statement Value) : Statement(Position) { public const string Kind = "set"; }
         public sealed record class MemberAccess(IEPosition Position, Statement Receiver, string Member) : Statement(Position) { public const string Kind = "member"; }
         public sealed record class Group(IEPosition Position, List<Statement> Statements) : Statement(Position) { public const string Kind = "group"; }
+        public sealed record class Indexer(IEPosition Position, List<Statement> Statements) : Statement(Position) { public const string Kind = "indexer"; }
         public sealed record class FunctionDeclaration(IEPosition Position, List<string> Parameters, List<Statement> Body) : Statement(Position) { public const string Kind = "function"; }
+        public sealed record class Operator(IEPosition Position, string Token) : Statement(Position) { public const string Kind = "operator"; }
 
         public sealed record class Invocation(IEPosition Position, Statement Receiver, string Function, List<Statement> Arguments) : Statement(Position)
         {

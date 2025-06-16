@@ -40,10 +40,12 @@ test.Action2 = ^(stringValue, doubleValue) {
 
 test.Action2.Invoke("a", 5)
 
-test.Func1 = ^(a) { a.add(1) }
+test.Func1 = ^(a) { a + 1 }
 
 test.Func1.Invoke(1)
 ```
+
+Check out tests contained in `InterExTests.cs` to view additional examples.
 
 # Usage
 
@@ -55,7 +57,7 @@ engine.Integration.EntityProvider.LoadAllAssemblies();
 
 try
 {
-    var document = IEDocument.ParseCode("path/to/file.ie", fileContent);
+    var document = new IEParser("path/to/file.ie", fileContent).Parse();
     var result = engine.Evaluate(document.Root, engine.PrepareCall());
     Console.WriteLine(result.ToString());
 }
@@ -73,9 +75,7 @@ Check `Program.cs` for a simple script-runner and REPL.
 
 # Guide
 
-## Operators
-
-InterEx has a very simple syntax. Overall it only includes 4 operators, that is: variable declaration, assignment, delegate definition and function call.
+## Syntax
 
 Define a variable using the `$` operator.
 
@@ -112,6 +112,36 @@ $"interpolated literal ${52:F2}"
 [elem1, elem2, elem3]
 { key: value, key2: 58 }
 ```
+
+## Operators
+
+Operators are mapped to methods defined in the `IEOperators` class. This class is partial and it is expected that a user will expand it with overloads and additional operators related to their use-case. All methods on `IEOperators` are available and all objects, where the receiver is instead used as the first argument.
+
+There is also special syntax defined for calling a selection of operators. The following operators have special syntax:
+
+| Operator | Function |
+| ---------| -------- |
+| (unary) `-` | `neg` |
+| (unary) `!` | `not` |
+| `=` | (assignment)  |
+| `&&` | `k_Then` |
+| `\|\|` | `k_Else` |
+| `<` | `lt` |
+| `<=` | `lte` |
+| `>` | `gt` |
+| `>=` | `gte` |
+| `==` | `eq` |
+| `!=` | `neq` |
+| `+` | `add` |
+| `-` | `sub` |
+| `*` | `mul` |
+| `/` | `div` |
+| `%` | `mod` |
+| `.` | (member access) |
+| `()` | (invocation) |
+| `[]` | (index) |
+
+Several operators have a special implementation that does not map to a function but creates a custom syntax construct. Details can be found in the `IEParser.ParseExpression()` method. It is also worth mentioning that, because `k_Then` and `k_Else` are keyword functions, they can not be overloaded.
 
 ## Metaprogramming
 

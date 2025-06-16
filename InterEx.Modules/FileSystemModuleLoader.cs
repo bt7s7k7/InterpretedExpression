@@ -24,7 +24,7 @@ public class FileSystemModuleLoader : IModuleLoader
         }
 
         var content = File.ReadAllText(targetPath);
-        var document = IEDocument.ParseCode(targetPath, content);
+        var document = new IEParser(targetPath, content).Parse();
 
         loadInfo = new ModuleLoadInfo("file:/" + targetPath, document);
         this._cache.Add(targetPath, loadInfo);

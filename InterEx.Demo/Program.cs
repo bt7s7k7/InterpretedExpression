@@ -18,7 +18,7 @@ if (argv is [_, "repl"])
     {
         try
         {
-            var document = IEDocument.ParseCode("anon", input);
+            var document = new IEParser("anon", input).Parse();
             Console.WriteLine(document.ToJson());
 
             var result = engine.Evaluate(document.Root, engine.PrepareCall());
@@ -36,14 +36,16 @@ if (argv is [_, "repl"])
 
     readline.Run();
 }
-else if (argv is [_, "loop"])
+else
 {
     while (true)
     {
         var input = File.ReadAllText(path);
+
         try
         {
-            var document = IEDocument.ParseCode(path, input);
+            var document = new IEParser(path, input).Parse();
+
             Console.WriteLine(document.ToJson());
 
             var result = engine.Evaluate(document.Root, engine.PrepareCall());
@@ -58,27 +60,7 @@ else if (argv is [_, "loop"])
             Console.WriteLine("[ERR] " + error.FlattenMessage());
         }
 
+        if (argv is not [_, "loop"]) break;
         Console.ReadKey();
-    }
-}
-else
-{
-    var input = File.ReadAllText(path);
-
-    try
-    {
-        var document = IEDocument.ParseCode(path, input);
-        Console.WriteLine(document.ToJson());
-
-        var result = engine.Evaluate(document.Root, engine.PrepareCall());
-        Console.WriteLine(result.ToString());
-    }
-    catch (IEParsingException error)
-    {
-        Console.WriteLine("[SYN] " + error.Message);
-    }
-    catch (IERuntimeException error)
-    {
-        Console.WriteLine("[ERR] " + error.FlattenMessage());
     }
 }

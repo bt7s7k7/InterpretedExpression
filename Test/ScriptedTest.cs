@@ -14,13 +14,13 @@ public class ScriptedTest
 
     public Value Run(string code, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0, Scope scope = null)
     {
-        var document = IEDocument.ParseCode(file, new String('\n', line) + code);
+        var document = new IEParser(file, new String('\n', line) + code).Parse();
         return this.Engine.Evaluate(document.Root, scope ?? this.Engine.PrepareCall());
     }
 
     public Module RunModule(string code, [CallerFilePath] string file = null)
     {
-        var document = IEDocument.ParseCode(file, code);
+        var document = new IEParser(file, code).Parse();
         var module = new Module("file://" + file);
         module.Load(this.ImportLib, document);
         return module;

@@ -16,7 +16,9 @@ namespace InterEx.Integration
         public static double add(double a, double b) => a + b;
         public static double sub(double a, double b) => a - b;
         public static double mul(double a, double b) => a * b;
+        public static double pow(double a, double b) => Math.Pow(a, b);
         public static double div(double a, double b) => a / b;
+        public static double mod(double a, double b) => a % b;
         public static double neg(double a) => -a;
 
         public static bool lt(double a, double b) => a < b;

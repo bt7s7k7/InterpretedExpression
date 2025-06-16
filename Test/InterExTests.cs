@@ -30,7 +30,7 @@ public class InterExTests
             test.Action2("a", 5)
             AssertEqual(executed, true)
 
-            test.Func1 = ^(a) { a.add(1) }
+            test.Func1 = ^(a) a + 1
 
             AssertEqual(test.Func1(1), 2)
         """);
@@ -176,7 +176,7 @@ public class InterExTests
         var tester = new ScriptedTest();
 
         tester.Run("""
-            GLOBAL.at("value") = 10
+            GLOBAL["value"] = 10
         """);
 
         Assert.That(tester.Engine.Integration.ExportValue<double>(tester.Run("""
@@ -193,13 +193,13 @@ public class InterExTests
             $value = 5
 
             AssertEqual(k_If(
-                (value.eq(1)) "one"
-                (value.eq(5)) "five"
+                (value == 1) "one"
+                (value == 5) "five"
             ), "five")
 
             AssertEqual(k_If(
-                (value.eq(1)) "one"
-                (value.eq(6)) "six"
+                (value == 1) "one"
+                (value == 6) "six"
                 "missing"
             ), "missing")
 
@@ -208,8 +208,8 @@ public class InterExTests
             ), "default")
 
             AssertEqual(k_If(
-                (value.eq(1)) "one"
-                (value.eq(6)) "six"
+                (value == 1) "one"
+                (value == 6) "six"
             ), null)
         """);
     }
@@ -295,6 +295,33 @@ public class InterExTests
 
             AssertEqual(method("foo"), "foo")
             AssertEqual(method(), "default")
+        """);
+    }
+
+    [Test]
+    public void Operators()
+    {
+        var tester = new ScriptedTest();
+
+        tester.Run("""
+            AssertEqual(1 * 2 + 3, 5)
+            AssertEqual(1 + 2 * 3, 7)
+            AssertEqual(1 == 2, false)
+            AssertEqual(1 != 2, true)
+
+            $a = 1
+            $b = 2
+
+            a = b = 3
+            AssertEqual(a, 3)
+            AssertEqual(b, 3)
+
+            false && (a = 4)
+            AssertEqual(a, 3)
+            true || (a = 5)
+            AssertEqual(a, 3)
+            false || (a = 5)
+            AssertEqual(a, 5)
         """);
     }
 }
