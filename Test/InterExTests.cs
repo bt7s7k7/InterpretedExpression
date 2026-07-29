@@ -324,4 +324,57 @@ public class InterExTests
             AssertEqual(a, 5)
         """);
     }
+
+    [Test]
+    public void GenericMethods()
+    {
+        new ScriptedTest().RunModule("""
+            AssertEqual(TestClass.Typed(System.Double, 1), "1")
+        """);
+
+        Assert.Throws(
+            Is.TypeOf<IERuntimeException>()
+            .And.Message.Contain("Cannot convert value System.Double into System.Type"),
+            () =>
+            {
+                new ScriptedTest().RunModule("""
+                    AssertEqual(TestClass.Typed(1), "1")
+                """);
+            }
+        );
+
+        Assert.Throws(
+            Is.TypeOf<IERuntimeException>()
+            .And.Message.Contain("Argument count mismatch, got 0, but expected 1 (System.Type)"),
+            () =>
+            {
+                new ScriptedTest().RunModule("""
+                    AssertEqual(TestClass.Typed(), "1")
+                """);
+            }
+        );
+
+        Assert.Throws(
+            Is.TypeOf<IERuntimeException>()
+            .And.Message.Contain("Argument count mismatch, got 0, but expected 1 (System.Double)"),
+            () =>
+            {
+                new ScriptedTest().RunModule("""
+                    AssertEqual(TestClass.Typed(System.Double), "1")
+                """);
+            }
+        );
+
+        Assert.Throws(
+            Is.TypeOf<IERuntimeException>()
+            .And.Message.Contain("Argument count mismatch, got 2, but expected 1 (System.Double)"),
+            () =>
+            {
+                new ScriptedTest().RunModule("""
+                    AssertEqual(TestClass.Typed(System.Double, 1, 0), "1")
+                """);
+            }
+        );
+
+    }
 }

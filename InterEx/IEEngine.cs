@@ -330,6 +330,23 @@ namespace InterEx
 
             if (target is MethodInfo method)
             {
+                if (function is TypeRegistry.OpenGenericFunctionInfo genericInfo)
+                {
+                    // If the function is generic, consume arguments to fill generic parameters
+                    // This Array.ConvertAll is safe, because genericInfo.GenericParameters is alway an array of Type types.
+
+                    var splitPoint = Math.Min(genericInfo.GenericParameters.Length, arguments.Length);
+
+                    var typeArguments_1 = arguments[..splitPoint];
+                    var typeArguments = Array.ConvertAll(this.Integration.ExportArguments(typeArguments_1, genericInfo.GenericParameters, context), v => (Type)v);
+
+                    var callArguments = arguments[splitPoint..];
+
+                    function = genericInfo.Specialise(typeArguments);
+                    method = (MethodInfo)function.Target;
+                    arguments = callArguments;
+                }
+
                 var exportedArguments = this.Integration.ExportArguments(arguments, function.Parameters, context);
                 result = method.Invoke(receiver.Content, exportedArguments);
             }
@@ -395,7 +412,7 @@ namespace InterEx
                 }
                 catch (IERuntimeException error)
                 {
-                    messages.Add(error.Message);
+                    messages.Add(error.FlattenMessage());
                     continue;
                 }
 

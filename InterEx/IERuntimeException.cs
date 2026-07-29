@@ -27,11 +27,9 @@ namespace InterEx
             var result = new StringBuilder();
             result.AppendLine(this.Message);
 
-            var inner = this.InnerException;
-            while (inner != null)
+            for (var inner = this.InnerException; inner != null; inner = inner.InnerException)
             {
                 result.AppendLine(inner.Message);
-                inner = inner.InnerException;
             }
 
             return result.ToString();

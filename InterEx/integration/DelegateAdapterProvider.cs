@@ -28,7 +28,8 @@ namespace InterEx.Integration
             var returnType = ((MethodInfo)invoke.Target).ReturnType;
 
             var ieFunctionInfo = this.ClassInfoProvider.GetClassInfo(typeof(IEFunction));
-            var ieFunctionInvoke = (MethodInfo)ieFunctionInfo.Functions["Invoke"][0].Target;
+            // Here we take the overload of the Invoke method which is not generic and returns void.
+            var ieFunctionInvoke = (MethodInfo)ieFunctionInfo.Functions["Invoke"].Find(v => v is not TypeRegistry.OpenGenericFunctionInfo).Target;
             var ieFunctionInvokeAndExport = (MethodInfo)ieFunctionInfo.Functions["InvokeAndExport"][0].Target;
 
             var ieFunctionParam = Expression.Parameter(typeof(IEFunction), "function");

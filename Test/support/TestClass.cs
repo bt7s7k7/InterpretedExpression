@@ -15,4 +15,6 @@ public class TestClass
 
     public static string GetString(string value) => value;
     public static string GetString() => "default";
+
+    public static string Typed<T>(T value) => value == null ? "null" : value.ToString();
 }

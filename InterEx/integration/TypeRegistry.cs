@@ -48,6 +48,23 @@ namespace InterEx.Integration
             }
         }
 
+        public readonly struct ClosedGenericTypeCache<T>()
+        {
+            public readonly Dictionary<string, T> Cache = [];
+
+            public bool TryGet(object[] arguments, out string cacheKey, out T value)
+            {
+                var typeArguments = arguments.Cast<Type>().ToArray();
+                cacheKey = $"<{String.Join(", ", (IEnumerable<Type>)typeArguments)}>";
+                return this.Cache.TryGetValue(cacheKey, out value);
+            }
+
+            public void Set(string cacheKey, T value)
+            {
+                this.Cache.Add(cacheKey, value);
+            }
+        }
+
         public class EntityInfo(EntityProvider owner, string name) : ICustomValue
         {
             public String Name = name;
@@ -61,7 +78,7 @@ namespace InterEx.Integration
             {
                 var parameters = type.GetTypeInfo().GenericTypeParameters;
                 var factoryParameters = Enumerable.Repeat(typeof(Type), parameters.Length).ToArray();
-                var cache = new Dictionary<string, EntityInfo>();
+                var cache = new ClosedGenericTypeCache<EntityInfo>();
                 var name = this.Name;
                 var owner = this.Owner;
 
@@ -69,13 +86,12 @@ namespace InterEx.Integration
                 this.Generics.Add(new((VariadicFunction)((arguments) =>
                 {
                     var typeArguments = arguments.Cast<Type>().ToArray();
-                    var cacheKey = $"<{String.Join(", ", (IEnumerable<Type>)typeArguments)}>";
-                    if (cache.TryGetValue(cacheKey, out var existing)) return existing;
+                    if (cache.TryGet(typeArguments, out var cacheKey, out var existing)) return existing;
 
                     var genericResult = type.MakeGenericType(typeArguments);
                     var genericName = name + cacheKey;
                     var entity = new EntityInfo(owner, genericName) { Class = genericResult };
-                    cache.Add(cacheKey, entity);
+                    cache.Set(cacheKey, entity);
 
                     return entity;
                 }), factoryParameters));
@@ -224,6 +240,24 @@ namespace InterEx.Integration
             }
         }
 
+        public record class OpenGenericFunctionInfo(MethodInfo method, int parameterCount) : FunctionInfo(method)
+        {
+            protected readonly ClosedGenericTypeCache<FunctionInfo> _cache = new();
+            public readonly Type[] GenericParameters = [.. Enumerable.Repeat(typeof(Type), parameterCount)];
+
+            public FunctionInfo Specialise(Type[] arguments)
+            {
+                if (this._cache.TryGet(arguments, out var cacheKey, out var existing)) return existing;
+
+                var baseMethod = (MethodInfo)this.Target;
+                var specializedMethod = baseMethod.MakeGenericMethod(arguments);
+                var info = new FunctionInfo(specializedMethod);
+                this._cache.Set(cacheKey, info);
+
+                return info;
+            }
+        }
+
         public class ClassInfo
         {
             public readonly Dictionary<string, List<FunctionInfo>> Functions = [];
@@ -255,7 +289,12 @@ namespace InterEx.Integration
 
             foreach (var method in type.GetMethods(flags))
             {
-                if (method.ContainsGenericParameters) continue;
+                if (method.ContainsGenericParameters)
+                {
+                    info.AddFunction(method.Name, new OpenGenericFunctionInfo(method, method.GetGenericArguments().Length));
+                    continue;
+                }
+
                 info.AddFunction(method.Name, new FunctionInfo(method));
             }
 
