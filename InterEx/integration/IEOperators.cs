@@ -26,8 +26,8 @@ namespace InterEx.Integration
         public static bool lte(double a, double b) => a <= b;
         public static bool gte(double a, double b) => a >= b;
 
-        public static bool eq(object a, object b) => a.Equals(b);
-        public static bool neq(object a, object b) => !a.Equals(b);
+        public static bool eq(object a, object b) => Equals(a, b);
+        public static bool neq(object a, object b) => !Equals(a, b);
 
         public static double length(ICollection list) => list.Count;
 

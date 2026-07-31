@@ -307,6 +307,10 @@ public class InterExTests
             AssertEqual(1 * 2 + 3, 5)
             AssertEqual(1 + 2 * 3, 7)
             AssertEqual(1 == 2, false)
+            AssertEqual(1 == 1, true)
+            AssertEqual(1 == null, false)
+            AssertEqual(null == 1, false)
+            AssertEqual(null == null, true)
             AssertEqual(1 != 2, true)
 
             $a = 1
