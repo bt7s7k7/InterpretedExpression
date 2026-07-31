@@ -322,6 +322,11 @@ public class InterExTests
             AssertEqual(a, 3)
             false || (a = 5)
             AssertEqual(a, 5)
+
+            $list = [1, 2, 3]
+            AssertEqual(list[1], 2)
+            list[1] = 5
+            AssertEqual(list[1], 5)
         """);
     }
 

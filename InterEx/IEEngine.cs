@@ -311,6 +311,19 @@ namespace InterEx
                     return new Value(builder.ToString());
                 }
 
+                if (statement is Statement.Indexer indexer)
+                {
+                    var list = new List<Value>(indexer.Statements.Count);
+
+                    foreach (var element in indexer.Statements)
+                    {
+                        var value = this.Evaluate(element, scope);
+                        list.Add(value);
+                    }
+
+                    return new Value(list);
+                }
+
                 throw new IERuntimeException(statement.Position.Format("Invalid statement"));
             }
             catch (Exception error)
