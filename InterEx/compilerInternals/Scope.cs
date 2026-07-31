@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using InterEx.InterfaceTypes;
 
 namespace InterEx.CompilerInternals
@@ -29,6 +30,14 @@ namespace InterEx.CompilerInternals
 
         public bool TryGetOwn(string name, out Variable variable)
         {
+            if (name == "SCOPE")
+            {
+                ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(this._variables, name, out var exists);
+                if (!exists) value = new Variable(new Value(this));
+                variable = value;
+                return true;
+            }
+
             return this._variables.TryGetValue(name, out variable);
         }
 

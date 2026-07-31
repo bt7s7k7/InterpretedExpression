@@ -375,6 +375,17 @@ public class InterExTests
                 """);
             }
         );
+    }
 
+    [Test]
+    public void ScopeAccess()
+    {
+        new ScriptedTest().RunModule("""
+            SCOPE.Declare("a").Content = 5
+            AssertEqual(a, 5)
+
+            $SCOPE = 5
+            AssertEqual(SCOPE, 5)
+        """);
     }
 }
