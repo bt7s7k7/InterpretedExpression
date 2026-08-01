@@ -339,6 +339,7 @@ public class InterExTests
     {
         new ScriptedTest().RunModule("""
             AssertEqual(TestClass.Typed(System.Double, 1), "1")
+            AssertEqual(TestClass.Typed(System.Double, 5), "5")
         """);
 
         Assert.Throws(

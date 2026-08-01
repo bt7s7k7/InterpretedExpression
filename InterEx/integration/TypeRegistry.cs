@@ -361,12 +361,16 @@ namespace InterEx.Integration
 
                     continue;
                 }
-                info.Properties.Add(property.Name, property);
+
+                // Do not use Add, because there can be multiple properties with the same name,
+                // (e.g. when using new). Doing this like this will make only the most derived
+                // property be accessible which mirrors how C# works.
+                info.Properties[property.Name] = property;
             }
 
             foreach (var field in type.GetFields(flags))
             {
-                info.Properties.Add(field.Name, field);
+                info.Properties[field.Name] = field;
             }
 
             foreach (var patcher in this._patchers)
