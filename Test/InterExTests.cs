@@ -97,18 +97,25 @@ public class InterExTests
             AssertEqual(foo.name, "Hello")
 
             $executed = false
+            $backingVariable = 52
 
-            foo._decl("value", ^{ executed = true, 52 }, null)
+            foo.__decl__("value", ^{ executed = true, backingVariable }, ^(value) backingVariable = value)
+            foo.__decl__("readonly", ^{ executed = true, backingVariable }, null)
 
             AssertEqual(foo.value, 52)
+            AssertEqual(foo.readonly, 52)
             AssertEqual(executed, true)
+            backingVariable = 12
+            AssertEqual(foo.value, 12)
+            foo.value = 36
+            AssertEqual(backingVariable, 36)
 
             Assert.Throws(InterEx.IERuntimeException, ^{
-                foo.value = 0
+                foo.readonly = 0
             })
 
             $variable = 1
-            foo._bind("variable", k_Ref(variable))
+            foo.__bind__("variable", k_Ref(variable))
 
             AssertEqual(foo.variable, variable)
             variable = 5

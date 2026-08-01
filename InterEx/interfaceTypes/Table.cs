@@ -123,28 +123,28 @@ public class Table : ICustomValue
 
     public bool Invoke(IEEngine engine, Statement.Invocation invocation, string name, out Value result, Value[] arguments)
     {
-        if (name == "_decl")
+        if (name == "__decl__")
         {
             var declareProperty = engine.Integration.InstanceCache.GetClassInfo(typeof(Table)).Functions["DeclareProperty"];
             result = engine.BridgeMethodCall(declareProperty, invocation, new Value(this), arguments);
             return true;
         }
 
-        if (name == "_del")
+        if (name == "__del__")
         {
             var deleteProperty = engine.Integration.InstanceCache.GetClassInfo(typeof(Table)).Functions["DeleteProperty"];
             result = engine.BridgeMethodCall(deleteProperty, invocation, new Value(this), arguments);
             return true;
         }
 
-        if (name == "_bind")
+        if (name == "__bind__")
         {
             var bindProperty = engine.Integration.InstanceCache.GetClassInfo(typeof(Table)).Functions["BindProperty"];
             result = engine.BridgeMethodCall(bindProperty, invocation, new Value(this), arguments);
             return true;
         }
 
-        if (name == "_props")
+        if (name == "__props__")
         {
             result = new Value(this.Properties);
             return true;
